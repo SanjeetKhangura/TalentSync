@@ -1,6 +1,6 @@
 # TalentSync
 
-Name: Sanjeet Khangura
+Name: Sanjeet Khangura / 100379050
 
 Name: Diksha
 
