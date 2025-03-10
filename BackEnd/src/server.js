@@ -1,27 +1,55 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
 
-// Enable CORS for all routes
+// Enable CORS
 app.use(cors());
 
 // Middleware to parse JSON
 app.use(bodyParser.json());
 
-// Endpoint to handle job application submissions
-app.post('/apply', (req, res) => {
-  const { name, email, preferredJob, education, workExperience } = req.body;
+// Mock user database (replace with a real database in production)
+const users = [];
 
-  // Log the received data
-  console.log('Received application:', req.body);
+// Login endpoint
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
 
-  // Send a success response
-  res.json({
-    message: 'Application submitted successfully! We will get back to you soon.',
-  });
+  // Find the user in the mock database
+  const user = users.find((u) => u.email === email && u.password === password);
+
+  if (user) {
+    res.json({ message: 'Login successful!' });
+  } else {
+    res.status(401).json({ message: 'Invalid email or password.' });
+  }
+});
+
+// Signup endpoint
+app.post('/signup', (req, res) => {
+  const { name, email, password } = req.body;
+
+  // Check if the email already exists
+  const userExists = users.some((user) => user.email === email);
+
+  if (userExists) {
+    return res.status(400).json({ message: 'Email already exists.' });
+  }
+
+  // Add the new user to the mock database
+  const newUser = {
+    id: users.length + 1,
+    name,
+    email,
+    password, // In production, store hashed passwords
+  };
+  users.push(newUser);
+
+  console.log('New user registered:', newUser);
+  res.json({ message: 'Signup successful!' });
 });
 
 // Start the server
