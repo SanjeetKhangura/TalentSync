@@ -4,6 +4,9 @@ document.getElementById('signupForm').addEventListener('submit', async function 
     // Get form data
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const role = document.getElementById('role').value;
+    const image = document.getElementById('image').files[0];
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
   
@@ -14,20 +17,19 @@ document.getElementById('signupForm').addEventListener('submit', async function 
     }
   
     // Prepare the data to send to the server
-    const signupData = {
-      name,
-      email,
-      password,
-    };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    formData.append('phone', phone);
+    formData.append('role', role);
+    formData.append('image', image);
+    formData.append('password', password);
   
     // Send the data to the backend
     try {
       const response = await fetch('http://localhost:3000/signup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(signupData),
+        body: formData, // Send as FormData
       });
   
       const result = await response.json();
