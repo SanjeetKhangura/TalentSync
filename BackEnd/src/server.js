@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -20,7 +21,6 @@ const storage = multer.memoryStorage(); // Store file in memory
 const upload = multer({ storage });
 
 // Create a MySQL connection pool
-require('dotenv').config(); // Load environment variables
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -30,6 +30,11 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***' : 'Not set');
+console.log('DB_NAME:', process.env.DB_NAME);
 
 // Test the database connection
 pool.getConnection((err, connection) => {
