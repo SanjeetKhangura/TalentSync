@@ -20,8 +20,12 @@ document.getElementById('loginForm').addEventListener('submit', async function (
         },
         body: JSON.stringify(loginData),
       });
-  
+      
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
   
       // Display the response message
       if (response.ok) {
