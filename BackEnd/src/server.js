@@ -5,9 +5,22 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const multer = require('multer'); // For handling file uploads
 const bcrypt = require('bcrypt'); // For password hashing
+const jwt = require('jsonwebtoken'); // For session management
+const winston = require('winston'); // For logging
 
 const app = express();
 const port = 3000;
+
+// Set up logging
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+  ],
+});
 
 // Enable CORS
 app.use(cors());
@@ -16,9 +29,19 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Set up multer for file uploads
+// Set up multer for file uploads with validation
 const storage = multer.memoryStorage(); // Store file in memory
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+});
 
 // Create a MySQL connection pool
 const pool = mysql.createPool({
@@ -34,9 +57,9 @@ const pool = mysql.createPool({
 // Test the database connection
 pool.getConnection((err, connection) => {
   if (err) {
-    console.error('Error connecting to MySQL:', err);
+    logger.error('Error connecting to MySQL:', err);
   } else {
-    console.log('Connected to MySQL database!');
+    logger.info('Connected to MySQL database!');
     connection.release();
   }
 });
@@ -45,12 +68,18 @@ pool.getConnection((err, connection) => {
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format.' });
+  }
+
   try {
     // Query the database to find the user
     const query = 'SELECT * FROM users WHERE Email = ?';
     pool.query(query, [email], async (err, results) => {
       if (err) {
-        console.error('Error executing query:', err);
+        logger.error('Error executing query:', err);
         return res.status(500).json({ message: 'An error occurred. Please try again later.' });
       }
 
@@ -61,10 +90,17 @@ app.post('/login', async (req, res) => {
         const passwordMatch = await bcrypt.compare(password, user.Password);
 
         if (passwordMatch) {
-          // Passwords match
-          res.json({ message: 'Login successful!' });
+          // Generate a JWT token for session management
+          const token = jwt.sign({ userId: user.UserID, role: user.Role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+          // Log successful login
+          logger.info(`User ${user.Email} logged in successfully.`);
+
+          // Return token and role to the frontend
+          res.json({ message: 'Login successful!', token, role: user.Role });
         } else {
-          // Passwords do not match
+          // Log failed login attempt
+          logger.warn(`Failed login attempt for email: ${email}`);
           res.status(401).json({ message: 'Invalid email or password.' });
         }
       } else {
@@ -73,15 +109,26 @@ app.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error during login:', error);
+    logger.error('Error during login:', error);
     res.status(500).json({ message: 'An error occurred. Please try again later.' });
   }
 });
 
 // Signup endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
-  const { name, email, phone, role, password } = req.body;
+  const { name, email, phone, role, password, confirmPassword } = req.body;
   const image = req.file ? req.file.buffer : null; // Get image as binary data
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format.' });
+  }
+
+  // Validate password match
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: 'Passwords do not match.' });
+  }
 
   try {
     // Hash the password
@@ -91,7 +138,7 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     const checkQuery = 'SELECT * FROM users WHERE email = ? OR phone = ?';
     pool.query(checkQuery, [email, phone], async (err, results) => {
       if (err) {
-        console.error('Error executing query:', err);
+        logger.error('Error executing query:', err);
         return res.status(500).json({ message: 'An error occurred. Please try again later.' });
       }
 
@@ -106,21 +153,23 @@ app.post('/signup', upload.single('image'), async (req, res) => {
       `;
       pool.query(insertQuery, [name, email, phone, role, image, hashedPassword], (err, results) => {
         if (err) {
-          console.error('Error executing query:', err);
+          logger.error('Error executing query:', err);
           return res.status(500).json({ message: 'An error occurred. Please try again later.' });
         }
 
-        console.log('New user registered:', { UserID: results.insertId, name, email });
+        // Log successful registration
+        logger.info(`New user registered: ${email}`);
+
         res.json({ message: 'Signup successful!' });
       });
     });
   } catch (error) {
-    console.error('Error during signup:', error);
+    logger.error('Error during signup:', error);
     res.status(500).json({ message: 'An error occurred. Please try again later.' });
   }
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  logger.info(`Server running at http://localhost:${port}`);
 });

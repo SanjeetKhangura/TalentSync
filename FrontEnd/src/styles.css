@@ -90,6 +90,12 @@ a:hover {
   text-decoration: underline;
 }
 
+/* loading indicator style */
+button[disabled] {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
