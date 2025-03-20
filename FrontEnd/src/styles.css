@@ -96,6 +96,7 @@ button[disabled] {
   cursor: not-allowed;
 }
 
+/* Animation */
 @keyframes fadeIn {
   from {
     opacity: 0;

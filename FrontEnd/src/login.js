@@ -1,22 +1,22 @@
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
-  // Get form data
+  // Gets form data
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  // Show loading indicator
+  // Shows the loading indicator
   const submitButton = document.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = 'Loading...';
 
-  // Prepare the data to send to the server
+  // Prepares the data to send to the server
   const loginData = {
     email,
     password,
   };
 
-  // Send the data to the backend
+  // Sends the data to the backend
   try {
     const response = await fetch('http://localhost:3000/login', {
       method: 'POST',

@@ -10,18 +10,18 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
 
-  // Validate password match
+  // Validates password match
   if (password !== confirmPassword) {
     document.getElementById('responseMessage').textContent = 'Passwords do not match.';
     return;
   }
 
-  // Show loading indicator
+  // Shows loading indicator
   const submitButton = document.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = 'Loading...';
 
-  // Prepare the data to send to the server
+  // Prepares the data to send to the server
   const formData = new FormData();
   formData.append('name', name);
   formData.append('email', email);

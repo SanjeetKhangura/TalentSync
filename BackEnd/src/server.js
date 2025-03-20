@@ -1,13 +1,23 @@
-require('dotenv').config(); // Load environment variables
+// Load environment variables
+require('dotenv').config(); 
+// Import Express module
 const express = require('express');
+// For parsing request body
 const bodyParser = require('body-parser');
+// For handling CORS
 const cors = require('cors');
+// For MySQL database
 const mysql = require('mysql2');
-const multer = require('multer'); // For handling file uploads
-const bcrypt = require('bcrypt'); // For password hashing
-const jwt = require('jsonwebtoken'); // For session management
-const winston = require('winston'); // For logging
+// For handling file uploads
+const multer = require('multer');
+// For password hashing
+const bcrypt = require('bcrypt'); 
+// For session management
+const jwt = require('jsonwebtoken');
+// For logging
+const winston = require('winston');
 
+// Create an Express app
 const app = express();
 const port = 3000;
 
@@ -117,7 +127,8 @@ app.post('/login', async (req, res) => {
 // Signup endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
   const { name, email, phone, role, password, confirmPassword } = req.body;
-  const image = req.file ? req.file.buffer : null; // Get image as binary data
+  // Get image as binary data
+  const image = req.file ? req.file.buffer : null;
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
