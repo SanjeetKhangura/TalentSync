@@ -17,7 +17,6 @@ const jwt = require('jsonwebtoken');
 // For logging
 const winston = require('winston');
 
-// Create an Express app
 const app = express();
 const port = 3000;
 
@@ -39,8 +38,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Set up multer for file uploads with validation
-const storage = multer.memoryStorage(); // Store file in memory
+// Set up multer for file uploads
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -126,9 +125,11 @@ app.post('/login', async (req, res) => {
 
 // Signup endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
-  const { name, email, phone, role, password, confirmPassword } = req.body;
-  // Get image as binary data
+  const { name, email, phone, password, confirmPassword } = req.body;
   const image = req.file ? req.file.buffer : null;
+
+  // Hardcode role as 'Applicant'
+  const role = 'Applicant';
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

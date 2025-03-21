@@ -5,28 +5,26 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   const name = document.getElementById('name').value;
   const email = document.getElementById('email').value;
   const phone = document.getElementById('phone').value;
-  const role = document.getElementById('role').value;
   const image = document.getElementById('image').files[0];
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
 
-  // Validates password match
+  // Validate password match
   if (password !== confirmPassword) {
     document.getElementById('responseMessage').textContent = 'Passwords do not match.';
     return;
   }
 
-  // Shows loading indicator
+  // Show loading indicator
   const submitButton = document.querySelector('button[type="submit"]');
   submitButton.disabled = true;
   submitButton.textContent = 'Loading...';
 
-  // Prepares the data to send to the server
+  // Prepare the data to send to the server
   const formData = new FormData();
   formData.append('name', name);
   formData.append('email', email);
   formData.append('phone', phone);
-  formData.append('role', role);
   formData.append('image', image);
   formData.append('password', password);
   formData.append('confirmPassword', confirmPassword);
