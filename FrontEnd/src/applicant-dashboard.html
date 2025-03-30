@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applicant Dashboard - ORS</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="profile-summary">
+        <img id="profileImage" src="" alt="Profile Image" class="profile-img">
+        <h3 id="userName"></h3>
+        <p id="userEmail"></p>
+      </div>
+      <nav>
+        <ul>
+          <li class="active" data-section="dashboard"><i class="fas fa-home"></i> Dashboard</li>
+          <li data-section="profile"><i class="fas fa-user"></i> My Profile</li>
+          <li data-section="jobs"><i class="fas fa-briefcase"></i> Job Search</li>
+          <li data-section="applications"><i class="fas fa-file-alt"></i> My Applications</li>
+          <li data-section="preferences"><i class="fas fa-star"></i> Job Preferences</li>
+          <li id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Dashboard Overview Section -->
+      <section id="dashboardSection" class="content-section active">
+        <h2>Dashboard Overview</h2>
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3>Pending Applications</h3>
+            <p id="pendingCount">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Next Step</h3>
+            <p id="nextStepCount">0</p>
+          </div>
+          <div class="stat-card">
+            <h3>Recommended Jobs</h3>
+            <p id="recommendedCount">0</p>
+          </div>
+        </div>
+        
+        <div class="recent-activity">
+          <h3>Recent Activity</h3>
+          <ul id="activityList"></ul>
+        </div>
+      </section>
+
+      <!-- Profile Section -->
+      <section id="profileSection" class="content-section">
+        <h2>My Profile</h2>
+        <form id="profileForm">
+          <div class="form-group">
+            <label for="profileName">Full Name</label>
+            <input type="text" id="profileName" required>
+          </div>
+          <div class="form-group">
+            <label for="profileEmail">Email</label>
+            <input type="email" id="profileEmail" required readonly>
+          </div>
+          <div class="form-group">
+            <label for="profilePhone">Phone</label>
+            <input type="tel" id="profilePhone" required>
+          </div>
+          <div class="form-group">
+            <label for="profileDob">Date of Birth</label>
+            <input type="date" id="profileDob" required>
+          </div>
+          <div class="form-group">
+            <label for="profileEducation">Education</label>
+            <input type="text" id="profileEducation" required>
+          </div>
+          <div class="form-group">
+            <label for="profileImageUpload">Profile Image</label>
+            <input type="file" id="profileImageUpload" accept="image/*">
+          </div>
+          <button type="submit" class="btn-primary">Update Profile</button>
+        </form>
+      </section>
+
+      <!-- Job Search Section -->
+      <section id="jobsSection" class="content-section">
+        <h2>Job Search</h2>
+        <div class="search-filters">
+          <input type="text" id="jobSearchInput" placeholder="Search by job title, keywords...">
+          <select id="jobTypeFilter">
+            <option value="">All Types</option>
+            <option value="Full Time">Full Time</option>
+            <option value="Part Time">Part Time</option>
+            <option value="Internship">Internship</option>
+          </select>
+          <select id="locationFilter">
+            <option value="">All Locations</option>
+            <!-- Will be populated dynamically -->
+          </select>
+          <button id="searchJobsBtn" class="btn-primary">Search</button>
+        </div>
+        
+        <div class="job-listings" id="jobListingsContainer">
+          <!-- Job cards will be inserted here dynamically -->
+        </div>
+      </section>
+
+      <!-- Applications Section -->
+      <section id="applicationsSection" class="content-section">
+        <h2>My Applications</h2>
+        <div class="application-filters">
+          <select id="applicationStatusFilter">
+            <option value="All">All Applications</option>
+            <option value="Pending">Pending</option>
+            <option value="Next Step">Next Step</option>
+            <option value="Screened Out">Screened Out</option>
+            <option value="Hired">Hired</option>
+          </select>
+        </div>
+        <div class="applications-list" id="applicationsList">
+          <!-- Applications will be inserted here dynamically -->
+        </div>
+      </section>
+
+      <!-- Preferences Section -->
+      <section id="preferencesSection" class="content-section">
+        <h2>Job Preferences</h2>
+        <div class="preferences-container">
+          <div class="current-preferences">
+            <h3>Current Preferences</h3>
+            <div id="currentPreferencesList"></div>
+          </div>
+          <div class="add-preference">
+            <h3>Add New Preference</h3>
+            <form id="preferenceForm">
+              <div class="form-group">
+                <label for="prefJobField">Job Field</label>
+                <input type="text" id="prefJobField" required>
+              </div>
+              <div class="form-group">
+                <label for="prefJobType">Job Type</label>
+                <select id="prefJobType" required>
+                  <option value="">Select Job Type</option>
+                  <option value="Full Time">Full Time</option>
+                  <option value="Part Time">Part Time</option>
+                  <option value="Internship">Internship</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="prefLocation">Location</label>
+                <input type="text" id="prefLocation" required>
+              </div>
+              <div class="form-group">
+                <label for="prefSalary">Minimum Salary ($)</label>
+                <input type="number" id="prefSalary" min="0" required>
+              </div>
+              <button type="submit" class="btn-primary">Add Preference</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Job Application Modal -->
+  <div id="jobModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2 id="modalJobTitle"></h2>
+      <div class="job-details">
+        <p><strong>Type:</strong> <span id="modalJobType"></span></p>
+        <p><strong>Location:</strong> <span id="modalJobLocation"></span></p>
+        <p><strong>Salary:</strong> $<span id="modalJobSalary"></span></p>
+        <p><strong>Education Required:</strong> <span id="modalJobEducation"></span></p>
+        <p><strong>Experience Required:</strong> <span id="modalJobExperience"></span> years</p>
+        <p><strong>Closing Date:</strong> <span id="modalJobCloseDate"></span></p>
+      </div>
+      <div class="job-description">
+        <h3>Job Description</h3>
+        <div id="modalJobDescription"></div>
+      </div>
+      <div class="application-form" id="applicationFormContainer">
+        <h3>Apply for this Position</h3>
+        <form id="applicationForm">
+          <div class="form-group">
+            <label for="coverLetter">Cover Letter</label>
+            <textarea id="coverLetter" rows="5" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="resumeUpload">Upload Resume (PDF)</label>
+            <input type="file" id="resumeUpload" accept=".pdf" required>
+          </div>
+          <button type="submit" class="btn-primary">Submit Application</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="applicant-dashboard.js"></script>
+</body>
+</html>

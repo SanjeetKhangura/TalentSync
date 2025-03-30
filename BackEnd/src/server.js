@@ -31,8 +31,13 @@ const logger = winston.createLogger({
   ],
 });
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with proper configuration
+app.use(cors({
+  origin: 'http://localhost:52330', // Adjust if your frontend runs on a different port
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Middleware to parse JSON and form data
 app.use(bodyParser.json());
@@ -73,7 +78,7 @@ pool.getConnection((err, connection) => {
   }
 });
 
-// Login endpoint
+// Login endpoint - Updated with proper headers
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -100,13 +105,27 @@ app.post('/login', async (req, res) => {
 
         if (passwordMatch) {
           // Generate a JWT token for session management
-          const token = jwt.sign({ userId: user.UserID, role: user.Role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+          const token = jwt.sign(
+            { userId: user.UserID, role: user.Role }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' }
+          );
+
+          // Set secure HTTP headers
+          res.header('Access-Control-Allow-Credentials', 'true');
+          res.header('Access-Control-Expose-Headers', 'Authorization');
+          res.header('Authorization', `Bearer ${token}`);
 
           // Log successful login
           logger.info(`User ${user.Email} logged in successfully.`);
 
           // Return token and role to the frontend
-          res.json({ message: 'Login successful!', token, role: user.Role });
+          res.json({ 
+            message: 'Login successful!', 
+            token, 
+            role: user.Role,
+            redirect: `${user.Role.toLowerCase()}-dashboard.html`
+          });
         } else {
           // Log failed login attempt
           logger.warn(`Failed login attempt for email: ${email}`);
@@ -207,6 +226,90 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'An error occurred during signup.' });
   }
 });
+
+// Applicant Dashboard Endpoints
+
+// Get user data
+app.get('/users/:id', authenticateToken, (req, res) => {
+  const userId = req.params.id;
+  
+  pool.query('SELECT * FROM users WHERE UserID = ?', [userId], (err, results) => {
+    if (err) {
+      logger.error('Error fetching user:', err);
+      return res.status(500).json({ message: 'Error fetching user data' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const user = results[0];
+    // Don't send password back
+    delete user.Password;
+    res.json(user);
+  });
+});
+
+// Get applicant data by user ID
+app.get('/applicants/user/:userId', authenticateToken, (req, res) => {
+  const userId = req.params.userId;
+  
+  pool.query('SELECT * FROM applicant WHERE UserID = ?', [userId], (err, results) => {
+    if (err) {
+      logger.error('Error fetching applicant:', err);
+      return res.status(500).json({ message: 'Error fetching applicant data' });
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Applicant not found' });
+    }
+    
+    res.json(results[0]);
+  });
+});
+
+// Get application stats for dashboard
+app.get('/applications/stats/:applicantId', authenticateToken, (req, res) => {
+  const applicantId = req.params.applicantId;
+  
+  const query = `
+    SELECT 
+      SUM(CASE WHEN Status = 'Pending' THEN 1 ELSE 0 END) as pending,
+      SUM(CASE WHEN Status = 'Next Step' THEN 1 ELSE 0 END) as nextStep
+    FROM applications
+    WHERE ApplicantID = ?
+  `;
+  
+  pool.query(query, [applicantId], (err, results) => {
+    if (err) {
+      logger.error('Error fetching application stats:', err);
+      return res.status(500).json({ message: 'Error fetching stats' });
+    }
+    
+    res.json(results[0] || { pending: 0, nextStep: 0 });
+  });
+});
+
+// Middleware to authenticate JWT token - Updated
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication token missing' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
+// Add OPTIONS handler for preflight requests
+app.options('*', cors());
 
 // Start the server
 app.listen(port, () => {
