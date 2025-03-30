@@ -125,59 +125,86 @@ app.post('/login', async (req, res) => {
 
 // Signup endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
-  const { name, email, phone, password, confirmPassword } = req.body;
+  const { 
+    name, 
+    email, 
+    phone, 
+    password, 
+    confirmPassword,
+    dob,
+    education,
+    workExperience,
+    preferredJobs
+  } = req.body;
+  
   const image = req.file ? req.file.buffer : null;
+  const role = 'Applicant'; // Hardcoded
 
-  // Hardcode role as 'Applicant'
-  const role = 'Applicant';
-
-  // Validate email format
+  // Validate inputs
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ message: 'Invalid email format.' });
   }
 
-  // Validate password match
+  // validate password match
   if (password !== confirmPassword) {
     return res.status(400).json({ message: 'Passwords do not match.' });
   }
 
   try {
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const connection = await pool.promise().getConnection();
+    
+    try {
+      await connection.beginTransaction();
 
-    // Check if the email or phone already exists
-    const checkQuery = 'SELECT * FROM users WHERE email = ? OR phone = ?';
-    pool.query(checkQuery, [email, phone], async (err, results) => {
-      if (err) {
-        logger.error('Error executing query:', err);
-        return res.status(500).json({ message: 'An error occurred. Please try again later.' });
-      }
+      // 1. Check for existing user
+      const [existingUsers] = await connection.query(
+        'SELECT * FROM users WHERE email = ? OR phone = ?',
+        [email, phone]
+      );
 
-      if (results.length > 0) {
+      if (existingUsers.length > 0) {
+        await connection.rollback();
         return res.status(400).json({ message: 'Email or phone already exists.' });
       }
 
-      // Insert the new user into the database
-      const insertQuery = `
-        INSERT INTO users (Name, Email, Phone, Role, Image, Password)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
-      pool.query(insertQuery, [name, email, phone, role, image, hashedPassword], (err, results) => {
-        if (err) {
-          logger.error('Error executing query:', err);
-          return res.status(500).json({ message: 'An error occurred. Please try again later.' });
-        }
+      // 2. Insert into users table
+      const [userResult] = await connection.query(
+        `INSERT INTO users (Name, Email, Phone, Role, Image, Password)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [name, email, phone, role, image, hashedPassword]
+      );
 
-        // Log successful registration
-        logger.info(`New user registered: ${email}`);
+      const newUserId = userResult.insertId;
 
-        res.json({ message: 'Signup successful!' });
+      // 3. Insert into applicant table
+      await connection.query(
+        `INSERT INTO applicant 
+        (UserID, DateOfBirth, Education, WorkExperience, PreferredJobs)
+         VALUES (?, ?, ?, ?, ?)`,
+        [newUserId, dob, education, workExperience, preferredJobs]
+      );
+
+      await connection.commit();
+      res.json({ 
+        message: 'Signup successful!',
+        userId: newUserId
       });
-    });
+
+    } catch (err) {
+      await connection.rollback();
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ message: 'Duplicate entry detected.' });
+      }
+      logger.error('Transaction error:', err);
+      throw err;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
-    logger.error('Error during signup:', error);
-    res.status(500).json({ message: 'An error occurred. Please try again later.' });
+    logger.error('Signup error:', error);
+    res.status(500).json({ message: 'An error occurred during signup.' });
   }
 });
 

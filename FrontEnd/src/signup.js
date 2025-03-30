@@ -8,6 +8,17 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   const image = document.getElementById('image').files[0];
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
+  const dob = document.getElementById('dob').value;
+  const educationLevel = document.getElementById('educationLevel').value;
+  const degreeField = document.getElementById('degreeField').value;
+  const yearsExperience = document.getElementById('yearsExperience').value;
+  const preferredJobs = document.getElementById('preferredJobs').value;
+
+  // Combine education level and field
+  const education = degreeField ? `${educationLevel} in ${degreeField}` : educationLevel;
+  
+  // Create work experience string
+  const workExperience = `${yearsExperience} years of experience`;
 
   // Validate password match
   if (password !== confirmPassword) {
@@ -25,15 +36,19 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   formData.append('name', name);
   formData.append('email', email);
   formData.append('phone', phone);
-  formData.append('image', image);
+  if (image) formData.append('image', image);
   formData.append('password', password);
   formData.append('confirmPassword', confirmPassword);
+  formData.append('dob', dob);
+  formData.append('education', education);
+  formData.append('workExperience', workExperience);
+  formData.append('preferredJobs', preferredJobs);
 
   // Send the data to the backend
   try {
     const response = await fetch('http://localhost:3000/signup', {
       method: 'POST',
-      body: formData, // Send as FormData
+      body: formData,
     });
 
     const result = await response.json();
@@ -55,5 +70,7 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   } catch (error) {
     console.error('Error:', error);
     document.getElementById('responseMessage').textContent = 'An error occurred. Please try again later.';
+    submitButton.disabled = false;
+    submitButton.textContent = 'Signup';
   }
 });

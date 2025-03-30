@@ -16,6 +16,7 @@
   <div class="container">
     <h1>Signup</h1>
     <form id="signupForm" enctype="multipart/form-data">
+      <!-- Basic Info -->
       <label for="name">Full Name:</label>
       <input type="text" id="name" required>
 
@@ -33,6 +34,30 @@
 
       <label for="confirmPassword">Confirm Password:</label>
       <input type="password" id="confirmPassword" required>
+
+      <!-- Applicant Specific Info -->
+      <label for="dob">Date of Birth:</label>
+      <input type="date" id="dob" required>
+
+      <label for="educationLevel">Highest Education Level:</label>
+      <select id="educationLevel" required>
+        <option value="">Select one...</option>
+        <option value="High School Diploma">High School Diploma</option>
+        <option value="Associate Degree">Associate Degree</option>
+        <option value="Bachelor's Degree">Bachelor's Degree</option>
+        <option value="Master's Degree">Master's Degree</option>
+        <option value="Doctorate">Doctorate</option>
+        <option value="Professional Certificate">Professional Certificate</option>
+      </select>
+
+      <label for="degreeField">Field of Study (if applicable):</label>
+      <input type="text" id="degreeField" placeholder="e.g., Computer Science, Business Administration">
+
+      <label for="yearsExperience">Years of Work Experience:</label>
+      <input type="number" id="yearsExperience" min="0" max="50" required>
+
+      <label for="preferredJobs">Preferred Job Types (comma separated):</label>
+      <textarea id="preferredJobs" required placeholder="e.g., Software Developer, Data Analyst, Project Manager"></textarea>
 
       <button type="submit">Signup</button>
     </form>
