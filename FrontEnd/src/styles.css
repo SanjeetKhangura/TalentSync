@@ -219,12 +219,12 @@ a:hover {
 
 /* APPLICANT DASHBOARD */
 /* Dashboard Specific Styles */
-.dashboard-container {
+.applicant-dashboard-container {
   display: flex;
   min-height: 100vh;
 }
 
-.sidebar {
+.applicant-sidebar {
   width: 250px;
   background-color: #2c3e50;
   color: white;
@@ -234,12 +234,12 @@ a:hover {
   overflow-y: auto;
 }
 
-.profile-summary {
+.applicant-profile-summary {
   text-align: center;
   margin-bottom: 2rem;
 }
 
-.profile-img {
+.applicant-profile-img {
   width: 100px;
   height: 100px;
   border-radius: 50%;
@@ -248,12 +248,12 @@ a:hover {
   margin: 0 auto 1rem;
 }
 
-.sidebar nav ul {
+.applicant-sidebar nav ul {
   list-style: none;
   padding: 0;
 }
 
-.sidebar nav li {
+.applicant-sidebar nav li {
   padding: 0.8rem 1rem;
   margin-bottom: 0.5rem;
   border-radius: 6px;
@@ -263,34 +263,34 @@ a:hover {
   gap: 0.8rem;
 }
 
-.sidebar nav li:hover, .sidebar nav li.active {
+.applicant-sidebar nav li:hover, .applicant-sidebar nav li.active {
   background-color: #34495e;
 }
 
-.main-content {
+.applicant-main-content {
   flex: 1;
   margin-left: 250px;
   padding: 2rem;
   background-color: #f5f7fa;
 }
 
-.content-section {
+.applicant-content-section {
   display: none;
 }
 
-.content-section.active {
+.applicant-content-section.active {
   display: block;
   animation: fadeIn 0.5s ease-out;
 }
 
-.stats-container {
+.applicant-stats-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.stat-card {
+.applicant-stat-card {
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
@@ -298,45 +298,45 @@ a:hover {
   text-align: center;
 }
 
-.stat-card h3 {
+.applicant-stat-card h3 {
   color: #7f8c8d;
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.stat-card p {
+.applicant-stat-card p {
   font-size: 2rem;
   font-weight: bold;
   color: #2c3e50;
   margin: 0;
 }
 
-.recent-activity {
+.applicant-recent-activity {
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.search-filters {
+.applicant-search-filters {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
-.search-filters input, .search-filters select {
+.applicant-search-filters input, .applicant-search-filters select {
   flex: 1;
   min-width: 200px;
 }
 
-.job-listings {
+.applicant-job-listings {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
-.job-card {
+.applicant-job-card {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
@@ -345,47 +345,48 @@ a:hover {
   cursor: pointer;
 }
 
-.job-card:hover {
+.applicant-job-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.job-card h3 {
+.applicant-job-card h3 {
   margin-top: 0;
   color: #2c3e50;
 }
 
-.job-card p {
+.applicant-job-card p {
   margin: 0.5rem 0;
   color: #7f8c8d;
 }
 
-.job-card .job-meta {
+.applicant-job-card .job-meta {
   display: flex;
   justify-content: space-between;
   margin-top: 1rem;
   font-size: 0.9rem;
 }
 
-.applications-list {
+.applicant-applications-list {
   display: grid;
   gap: 1rem;
 }
 
-.application-card {
+.applicant-application-card {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.application-card .status {
+.applicant-application-card .status {
   display: inline-block;
   padding: 0.3rem 0.8rem;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: bold;
 }
+
 
 .status-Pending {
   background-color: #f39c12;
@@ -407,13 +408,13 @@ a:hover {
   color: white;
 }
 
-.preferences-container {
+.applicant-preferences-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
 }
 
-.preference-card {
+.applicant-preference-card {
   background: white;
   padding: 1rem;
   border-radius: 8px;
@@ -429,7 +430,7 @@ a:hover {
 }
 
 /* Modal Styles */
-.modal {
+.applicant-modal {
   display: none;
   position: fixed;
   z-index: 100;
@@ -441,7 +442,7 @@ a:hover {
   overflow-y: auto;
 }
 
-.modal-content {
+.applicant-modal-content {
   background-color: white;
   margin: 2rem auto;
   padding: 2rem;
@@ -459,7 +460,7 @@ a:hover {
   cursor: pointer;
 }
 
-.job-details {
+.applicant-job-details {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
@@ -468,21 +469,21 @@ a:hover {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .sidebar {
+  .applicant-sidebar {
     width: 100%;
     height: auto;
     position: relative;
   }
   
-  .main-content {
+  .applicant-main-content {
     margin-left: 0;
   }
   
-  .preferences-container {
+  .applicant-preferences-container {
     grid-template-columns: 1fr;
   }
   
-  .modal-content {
+  .applicant-modal-content {
     width: 95%;
   }
 }
