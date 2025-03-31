@@ -13,7 +13,7 @@ body {
 }
 
 /* Logo Styles */
-.logo-container {
+.signup-logo-container, .login-logo-container {
   position: absolute;
   top: 30px;
   left: 30px;
@@ -29,7 +29,7 @@ body {
 }
 
 /* Form Container */
-.container {
+.signup-container, .login-container {
   width: 400px;
   background-color: white;
   padding: 2.5rem;
@@ -128,7 +128,7 @@ button[disabled] {
 }
 
 /* Response Message */
-#responseMessage {
+#signupResponseMessage, #loginResponseMessage {
   margin: 1rem 0;
   padding: 0.7rem;
   border-radius: 6px;
@@ -136,7 +136,7 @@ button[disabled] {
   font-size: 0.9rem;
 }
 
-#responseMessage:not(:empty) {
+#signupResponseMessage:not(:empty), #loginResponseMessage:not(:empty) {
   background-color: #f8f9fa;
   border: 1px solid #ddd;
 }
