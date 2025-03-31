@@ -8,8 +8,10 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   const submitButton = document.querySelector('button[type="submit"]');
 
   // Clear previous messages
-  responseMessage.textContent = '';
-  responseMessage.className = '';
+  if (responseMessage) {
+    responseMessage.textContent = '';
+    responseMessage.className = 'message'; // Reset to base message class
+  }
 
   // Validate inputs
   if (!emailInput.value || !passwordInput.value) {
@@ -79,12 +81,20 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
   // Helper functions
   function showError(message) {
-    responseMessage.textContent = message;
-    responseMessage.classList.add('error-message');
+    if (responseMessage) {
+      responseMessage.textContent = message;
+      responseMessage.classList.add('error-message');
+    } else {
+      console.error('Response message element not found');
+    }
   }
 
   function showSuccess(message) {
-    responseMessage.textContent = message;
-    responseMessage.classList.add('success-message');
+    if (responseMessage) {
+      responseMessage.textContent = message;
+      responseMessage.classList.add('success-message');
+    } else {
+      console.error('Response message element not found');
+    }
   }
 });

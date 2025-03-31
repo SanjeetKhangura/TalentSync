@@ -12,18 +12,18 @@
     <!-- Sidebar Navigation -->
     <aside class="applicant-sidebar">
       <div class="applicant-profile-summary">
-        <img id="profileImage" src="" alt="Profile Image" class="profile-img">
+        <img id="profileImage" src="" alt="Profile Image" class="applicant-profile-img">
         <h3 id="userName"></h3>
         <p id="userEmail"></p>
       </div>
       <nav>
-        <ul>
-          <li class="active" data-section="dashboard"><i class="fas fa-home"></i> Dashboard</li>
-          <li data-section="profile"><i class="fas fa-user"></i> My Profile</li>
-          <li data-section="jobs"><i class="fas fa-briefcase"></i> Job Search</li>
-          <li data-section="applications"><i class="fas fa-file-alt"></i> My Applications</li>
-          <li data-section="preferences"><i class="fas fa-star"></i> Job Preferences</li>
-          <li id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</li>
+        <ul class="applicant-sidebar-nav">
+          <li class="applicant-sidebar-item active" data-section="dashboard"><i class="fas fa-home"></i> Dashboard</li>
+          <li class="applicant-sidebar-item" data-section="profile"><i class="fas fa-user"></i> My Profile</li>
+          <li class="applicant-sidebar-item" data-section="jobs"><i class="fas fa-briefcase"></i> Job Search</li>
+          <li class="applicant-sidebar-item" data-section="applications"><i class="fas fa-file-alt"></i> My Applications</li>
+          <li class="applicant-sidebar-item" data-section="preferences"><i class="fas fa-star"></i> Job Preferences</li>
+          <li class="applicant-sidebar-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</li>
         </ul>
       </nav>
     </aside>
@@ -35,16 +35,16 @@
         <h2>Dashboard Overview</h2>
         <div class="applicant-stats-container">
           <div class="applicant-stat-card">
-            <h3>Pending Applications</h3>
-            <p id="pendingCount">0</p>
+            <h3 class="applicant-stat-title">Pending Applications</h3>
+            <p class="applicant-stat-value" id="pendingCount">0</p>
           </div>
           <div class="applicant-stat-card">
-            <h3>Next Step</h3>
-            <p id="nextStepCount">0</p>
+            <h3 class="applicant-stat-title">Next Step</h3>
+            <p class="applicant-stat-value" id="nextStepCount">0</p>
           </div>
           <div class="applicant-stat-card">
-            <h3>Recommended Jobs</h3>
-            <p id="recommendedCount">0</p>
+            <h3 class="applicant-stat-title">Recommended Jobs</h3>
+            <p class="applicant-stat-value" id="recommendedCount">0</p>
           </div>
         </div>
         
@@ -58,31 +58,31 @@
       <section id="profileSection" class="applicant-content-section">
         <h2>My Profile</h2>
         <form id="profileForm">
-          <div class="applicant-form-group">
-            <label for="profileName">Full Name</label>
-            <input type="text" id="profileName" required>
+          <div class="form-group">
+            <label for="profileName" class="form-label">Full Name</label>
+            <input type="text" id="profileName" class="form-input" required>
           </div>
-          <div class="applicant-form-group">
-            <label for="profileEmail">Email</label>
-            <input type="email" id="profileEmail" required readonly>
+          <div class="form-group">
+            <label for="profileEmail" class="form-label">Email</label>
+            <input type="email" id="profileEmail" class="form-input" required readonly>
           </div>
-          <div class="applicant-form-group">
-            <label for="profilePhone">Phone</label>
-            <input type="tel" id="profilePhone" required>
+          <div class="form-group">
+            <label for="profilePhone" class="form-label">Phone</label>
+            <input type="tel" id="profilePhone" class="form-input" required>
           </div>
-          <div class="applicant-form-group">
-            <label for="profileDob">Date of Birth</label>
-            <input type="date" id="profileDob" required>
+          <div class="form-group">
+            <label for="profileDob" class="form-label">Date of Birth</label>
+            <input type="date" id="profileDob" class="form-input" required>
           </div>
-          <div class="applicant-form-group">
-            <label for="profileEducation">Education</label>
-            <input type="text" id="profileEducation" required>
+          <div class="form-group">
+            <label for="profileEducation" class="form-label">Education</label>
+            <input type="text" id="profileEducation" class="form-input" required>
           </div>
-          <div class="applicant-form-group">
-            <label for="profileImageUpload">Profile Image</label>
-            <input type="file" id="profileImageUpload" accept="image/*">
+          <div class="form-group">
+            <label for="profileImageUpload" class="form-label">Profile Image</label>
+            <input type="file" id="profileImageUpload" class="form-input" accept="image/*">
           </div>
-          <button type="submit" class="btn-primary">Update Profile</button>
+          <button type="submit" class="btn btn-primary">Update Profile</button>
         </form>
       </section>
 
@@ -90,18 +90,18 @@
       <section id="jobsSection" class="applicant-content-section">
         <h2>Job Search</h2>
         <div class="applicant-search-filters">
-          <input type="text" id="jobSearchInput" placeholder="Search by job title, keywords...">
-          <select id="jobTypeFilter">
+          <input type="text" id="jobSearchInput" class="form-input" placeholder="Search by job title, keywords...">
+          <select id="jobTypeFilter" class="form-select">
             <option value="">All Types</option>
             <option value="Full Time">Full Time</option>
             <option value="Part Time">Part Time</option>
             <option value="Internship">Internship</option>
           </select>
-          <select id="locationFilter">
+          <select id="locationFilter" class="form-select">
             <option value="">All Locations</option>
             <!-- Will be populated dynamically -->
           </select>
-          <button id="searchJobsBtn" class="btn-primary">Search</button>
+          <button id="searchJobsBtn" class="btn btn-primary">Search</button>
         </div>
         
         <div class="applicant-job-listings" id="jobListingsContainer">
@@ -113,7 +113,7 @@
       <section id="applicationsSection" class="applicant-content-section">
         <h2>My Applications</h2>
         <div class="applicant-application-filters">
-          <select id="applicationStatusFilter">
+          <select id="applicationStatusFilter" class="form-select">
             <option value="All">All Applications</option>
             <option value="Pending">Pending</option>
             <option value="Next Step">Next Step</option>
@@ -137,28 +137,28 @@
           <div class="applicant-add-preference">
             <h3>Add New Preference</h3>
             <form id="preferenceForm">
-              <div class="applicant-form-group">
-                <label for="prefJobField">Job Field</label>
-                <input type="text" id="prefJobField" required>
+              <div class="form-group">
+                <label for="prefJobField" class="form-label">Job Field</label>
+                <input type="text" id="prefJobField" class="form-input" required>
               </div>
-              <div class="applicant-form-group">
-                <label for="prefJobType">Job Type</label>
-                <select id="prefJobType" required>
+              <div class="form-group">
+                <label for="prefJobType" class="form-label">Job Type</label>
+                <select id="prefJobType" class="form-select" required>
                   <option value="">Select Job Type</option>
                   <option value="Full Time">Full Time</option>
                   <option value="Part Time">Part Time</option>
                   <option value="Internship">Internship</option>
                 </select>
               </div>
-              <div class="applicant-form-group">
-                <label for="prefLocation">Location</label>
-                <input type="text" id="prefLocation" required>
+              <div class="form-group">
+                <label for="prefLocation" class="form-label">Location</label>
+                <input type="text" id="prefLocation" class="form-input" required>
               </div>
-              <div class="applicant-form-group">
-                <label for="prefSalary">Minimum Salary ($)</label>
-                <input type="number" id="prefSalary" min="0" required>
+              <div class="form-group">
+                <label for="prefSalary" class="form-label">Minimum Salary ($)</label>
+                <input type="number" id="prefSalary" class="form-input" min="0" required>
               </div>
-              <button type="submit" class="btn-primary">Add Preference</button>
+              <button type="submit" class="btn btn-primary">Add Preference</button>
             </form>
           </div>
         </div>
@@ -186,15 +186,15 @@
       <div class="applicant-application-form" id="applicationFormContainer">
         <h3>Apply for this Position</h3>
         <form id="applicationForm">
-          <div class="applicant-form-group">
-            <label for="coverLetter">Cover Letter</label>
-            <textarea id="coverLetter" rows="5" required></textarea>
+          <div class="form-group">
+            <label for="coverLetter" class="form-label">Cover Letter</label>
+            <textarea id="coverLetter" class="form-textarea" rows="5" required></textarea>
           </div>
-          <div class="applicant-form-group">
-            <label for="resumeUpload">Upload Resume (PDF)</label>
-            <input type="file" id="resumeUpload" accept=".pdf" required>
+          <div class="form-group">
+            <label for="resumeUpload" class="form-label">Upload Resume (PDF)</label>
+            <input type="file" id="resumeUpload" class="form-input" accept=".pdf" required>
           </div>
-          <button type="submit" class="btn-primary">Submit Application</button>
+          <button type="submit" class="btn btn-primary">Submit Application</button>
         </form>
       </div>
     </div>

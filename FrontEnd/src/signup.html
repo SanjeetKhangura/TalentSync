@@ -6,65 +6,87 @@
   <title>Signup - Online Recruiting System</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="signup-screen">
   <!-- Logo Section -->
   <div class="signup-logo-container">
-    <img src="/Assets/dummylogo.png" alt="Online Recruiting System" class="logo">
+    <img src="/Assets/dummylogo.png" alt="Online Recruiting System" class="signup-logo">
   </div>
 
   <!-- Signup Form Section -->
   <div class="signup-container">
-    <h1>Signup</h1>
-    <form id="signupForm" enctype="multipart/form-data">
+    <h1 class="signup-title">Signup</h1>
+    <form id="signupForm" class="signup-form" enctype="multipart/form-data">
       <!-- Basic Info -->
-      <label for="name">Full Name:</label>
-      <input type="text" id="name" required>
+      <div class="form-group">
+        <label for="name" class="form-label">Full Name:</label>
+        <input type="text" id="name" class="form-input" required>
+      </div>
 
-      <label for="email">Email:</label>
-      <input type="email" id="email" required>
+      <div class="form-group">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" id="email" class="form-input" required>
+      </div>
 
-      <label for="phone">Phone:</label>
-      <input type="tel" id="phone" required>
+      <div class="form-group">
+        <label for="phone" class="form-label">Phone:</label>
+        <input type="tel" id="phone" class="form-input" required>
+      </div>
 
-      <label for="image">Profile Image:</label>
-      <input type="file" id="image" accept="image/*">
+      <div class="form-group">
+        <label for="image" class="form-label">Profile Image:</label>
+        <input type="file" id="image" class="form-input" accept="image/*">
+      </div>
 
-      <label for="password">Password:</label>
-      <input type="password" id="password" required>
+      <div class="form-group">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" id="password" class="form-input" required>
+      </div>
 
-      <label for="confirmPassword">Confirm Password:</label>
-      <input type="password" id="confirmPassword" required>
+      <div class="form-group">
+        <label for="confirmPassword" class="form-label">Confirm Password:</label>
+        <input type="password" id="confirmPassword" class="form-input" required>
+      </div>
 
       <!-- Applicant Specific Info -->
-      <label for="dob">Date of Birth:</label>
-      <input type="date" id="dob" required>
+      <div class="form-group">
+        <label for="dob" class="form-label">Date of Birth:</label>
+        <input type="date" id="dob" class="form-input" required>
+      </div>
 
-      <label for="educationLevel">Highest Education Level:</label>
-      <select id="educationLevel" required>
-        <option value="">Select one...</option>
-        <option value="High School Diploma">High School Diploma</option>
-        <option value="Associate Degree">Associate Degree</option>
-        <option value="Bachelor's Degree">Bachelor's Degree</option>
-        <option value="Master's Degree">Master's Degree</option>
-        <option value="Doctorate">Doctorate</option>
-        <option value="Professional Certificate">Professional Certificate</option>
-      </select>
+      <div class="form-group">
+        <label for="educationLevel" class="form-label">Highest Education Level:</label>
+        <select id="educationLevel" class="form-select" required>
+          <option value="">Select one...</option>
+          <option value="High School Diploma">High School Diploma</option>
+          <option value="Associate Degree">Associate Degree</option>
+          <option value="Bachelor's Degree">Bachelor's Degree</option>
+          <option value="Master's Degree">Master's Degree</option>
+          <option value="Doctorate">Doctorate</option>
+          <option value="Professional Certificate">Professional Certificate</option>
+        </select>
+      </div>
 
-      <label for="degreeField">Field of Study (if applicable):</label>
-      <input type="text" id="degreeField" placeholder="e.g., Computer Science, Business Administration">
+      <div class="form-group">
+        <label for="degreeField" class="form-label">Field of Study (if applicable):</label>
+        <input type="text" id="degreeField" class="form-input" placeholder="e.g., Computer Science, Business Administration">
+      </div>
 
-      <label for="yearsExperience">Years of Work Experience:</label>
-      <input type="number" id="yearsExperience" min="0" max="50" required>
+      <div class="form-group">
+        <label for="yearsExperience" class="form-label">Years of Work Experience:</label>
+        <input type="number" id="yearsExperience" class="form-input" min="0" max="50" required>
+      </div>
 
-      <label for="preferredJobs">Preferred Job Types (comma separated):</label>
-      <textarea id="preferredJobs" required placeholder="e.g., Software Developer, Data Analyst, Project Manager"></textarea>
+      <div class="form-group">
+        <label for="preferredJobs" class="form-label">Preferred Job Types (comma separated):</label>
+        <textarea id="preferredJobs" class="form-textarea" required placeholder="e.g., Software Developer, Data Analyst, Project Manager"></textarea>
+      </div>
 
-      <button type="submit">Signup</button>
+      <button type="submit" class="btn btn-primary">Signup</button>
     </form>
 
-    <div id="signupResponseMessage"></div>
+    <div id="responseMessage" class="message"></div>
 
-    <p>Already have an account? <a href="login.html">Login here</a>.</p>
+    <p>Already have an account? <a href="login.html" class="link">Login here</a>.</p>
   </div>
 
   <script src="signup.js"></script>
