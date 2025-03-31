@@ -36,6 +36,7 @@ app.use(cors({
   origin: 'http://localhost:52330', // Adjust if your frontend runs on a different port
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization'],
   credentials: true
 }));
 
@@ -229,22 +230,17 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 // Applicant Dashboard Endpoints
 
-// Get user data
-app.get('/users/:id', authenticateToken, (req, res) => {
-  const userId = req.params.id;
-  
-  pool.query('SELECT * FROM users WHERE UserID = ?', [userId], (err, results) => {
+// Get current user (for authentication check)
+app.get('/users/me', authenticateToken, (req, res) => {
+  console.log('HIT /users/me endpoint'); // Debug log
+  pool.query('SELECT * FROM users WHERE UserID = ?', [req.user.userId], (err, results) => {
     if (err) {
-      logger.error('Error fetching user:', err);
-      return res.status(500).json({ message: 'Error fetching user data' });
+      console.error('DB Error:', err);
+      return res.status(500).json({ error: 'Database error' });
     }
-    
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (!results.length) return res.status(404).json({ error: 'User not found' });
     
     const user = results[0];
-    // Don't send password back
     delete user.Password;
     res.json(user);
   });
@@ -254,7 +250,12 @@ app.get('/users/:id', authenticateToken, (req, res) => {
 app.get('/applicants/user/:userId', authenticateToken, (req, res) => {
   const userId = req.params.userId;
   
-  pool.query('SELECT * FROM applicant WHERE UserID = ?', [userId], (err, results) => {
+  pool.query(`
+    SELECT a.*, u.Name, u.Email, u.Phone 
+    FROM applicant a
+    JOIN users u ON a.UserID = u.UserID
+    WHERE a.UserID = ?
+  `, [userId], (err, results) => {
     if (err) {
       logger.error('Error fetching applicant:', err);
       return res.status(500).json({ message: 'Error fetching applicant data' });
@@ -287,6 +288,115 @@ app.get('/applications/stats/:applicantId', authenticateToken, (req, res) => {
     }
     
     res.json(results[0] || { pending: 0, nextStep: 0 });
+  });
+});
+
+// Get recommended jobs for applicant
+app.get('/jobs/recommended', authenticateToken, async (req, res) => {
+  try {
+    const [applicant] = await pool.promise().query(
+      'SELECT PreferredJobs FROM applicant WHERE UserID = ?', 
+      [req.user.userId]
+    );
+
+    // Return empty array if no preferences exist
+    if (!applicant.length || !applicant[0].PreferredJobs) {
+      return res.json([]);
+    }
+
+    const preferences = JSON.parse(applicant[0].PreferredJobs || '[]');
+    
+    // Return empty array if no matching jobs found
+    if (!preferences.length) {
+      return res.json([]);
+    }
+
+    const [jobs] = await pool.promise().query(
+      `SELECT * FROM jobs 
+       WHERE CloseDate > NOW() 
+       ORDER BY PostDate DESC 
+       LIMIT 10`
+    );
+    
+    res.json(jobs || []);
+    
+  } catch (error) {
+    console.error('Recommended jobs error:', error);
+    res.json([]); // Return empty array on error
+  }
+});
+
+// Get job details
+app.get('/jobs/:id', authenticateToken, (req, res) => {
+  const jobId = req.params.id;
+  
+  pool.query('SELECT * FROM jobs WHERE JobID = ?', [jobId], (err, results) => {
+      if (err) {
+          logger.error('Error fetching job:', err);
+          return res.status(500).json({ message: 'Error fetching job details' });
+      }
+      
+      if (results.length === 0) {
+          return res.status(404).json({ message: 'Job not found' });
+      }
+      
+      res.json(results[0]);
+  });
+});
+
+// Search jobs
+app.get('/jobs/search', authenticateToken, (req, res) => {
+  const { search, type, location } = req.query;
+  
+  let query = 'SELECT * FROM jobs WHERE CloseDate > NOW()';
+  const params = [];
+  
+  if (search) {
+      query += ' AND (PositionType LIKE ? OR Description LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+  }
+  
+  if (type) {
+      query += ' AND PositionType = ?';
+      params.push(type);
+  }
+  
+  if (location) {
+      query += ' AND Location LIKE ?';
+      params.push(`%${location}%`);
+  }
+  
+  query += ' ORDER BY PostDate DESC LIMIT 20';
+  
+  pool.query(query, params, (err, results) => {
+      if (err) {
+          logger.error('Error searching jobs:', err);
+          return res.status(500).json({ message: 'Error searching jobs' });
+      }
+      
+      res.json(results);
+  });
+});
+
+// Get applications for applicant
+app.get('/applications/applicant/:applicantId', authenticateToken, (req, res) => {
+  const applicantId = req.params.applicantId;
+  
+  const query = `
+      SELECT a.*, j.PositionType as JobTitle, j.Location, j.PositionType
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicantID = ?
+      ORDER BY a.ApplicationDate DESC
+  `;
+  
+  pool.query(query, [applicantId], (err, results) => {
+      if (err) {
+          logger.error('Error fetching applications:', err);
+          return res.status(500).json({ message: 'Error fetching applications' });
+      }
+      
+      res.json(results);
   });
 });
 
