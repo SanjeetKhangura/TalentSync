@@ -334,12 +334,13 @@ body {
   background-color: #34495e;
 }
 
-.profile-img {
-  width: 32px;
-  height: 32px;
+#navProfileImage {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #3498db;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .dropdown-content {

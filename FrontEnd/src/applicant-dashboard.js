@@ -60,6 +60,16 @@ async function loadUserData() {
         currentUser = await response.json();
         document.getElementById('navUserName').textContent = currentUser.Name || 'User';
 
+        // Set profile image if it exists
+        if (currentUser.Image) {
+            // Convert ArrayBuffer to base64 and set as image source
+            const base64String = arrayBufferToBase64(currentUser.Image);
+            document.getElementById('navProfileImage').src = `data:image/jpeg;base64,${base64String}`;
+        } else {
+            // Set default avatar if no image exists
+            document.getElementById('navProfileImage').src = 'path/to/default-avatar.png';
+        }
+
         // Load applicant data (if exists)
         if (currentUser.UserID) {
             try {
@@ -172,7 +182,6 @@ async function loadCurrentPreferences() {
             preferences = JSON.parse(currentApplicant.PreferredJobs);
         } catch (e) {
             // If parsing fails, try to handle as string
-            console.warn('Standard JSON parse failed, trying alternative parsing');
             preferences = tryParseAlternativeFormat(currentApplicant.PreferredJobs);
         }
         
@@ -323,6 +332,18 @@ function tryParseAlternativeFormat(prefString) {
         console.warn('Could not parse preferences:', prefString);
         return null;
     }
+}
+
+// Convert ArrayBuffer to Base64
+function arrayBufferToBase64(buffer) {
+    // Convert ArrayBuffer to base64 string
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
 }
 
 // Initialize

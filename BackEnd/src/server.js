@@ -232,7 +232,6 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 // Get current user (for authentication check)
 app.get('/users/me', authenticateToken, (req, res) => {
-  console.log('HIT /users/me endpoint'); // Debug log
   pool.query('SELECT * FROM users WHERE UserID = ?', [req.user.userId], (err, results) => {
     if (err) {
       console.error('DB Error:', err);
