@@ -1,318 +1,263 @@
 // Global Configuration
 const API_BASE = 'http://localhost:3000';
-let currentUser = null;
-let currentApplicant = null;
-let recommendedJobs = [];
+const DEFAULT_AVATAR = '/Assets/default-avatar.png';
+const state = {
+  user: null,
+  applicant: null,
+  recommendedJobs: []
+};
+
+// DOM Elements
+const elements = {
+  navUserName: document.getElementById('navUserName'),
+  navProfileImage: document.getElementById('navProfileImage'),
+  pendingCount: document.getElementById('pendingCount'),
+  nextStepCount: document.getElementById('nextStepCount'),
+  recommendedCount: document.getElementById('recommendedCount'),
+  jobListingsContainer: document.getElementById('jobListingsContainer'),
+  currentPreferencesList: document.getElementById('currentPreferencesList')
+};
 
 // Initialize Dashboard
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        await checkAuth();
-        await loadUserData();
-        await loadDashboardStats();
-        await loadRecommendedJobs();
-        await loadCurrentPreferences();
-        setupEventListeners();
-    } catch (error) {
-        console.error('Initialization error:', error);
-        showAlert('error', 'Failed to load dashboard');
-    }
-});
+document.addEventListener('DOMContentLoaded', initializeDashboard);
 
-// Authentication Check
+async function initializeDashboard() {
+  try {
+    await checkAuth();
+    await loadUserData(); // Must complete first
+    await Promise.all([
+      loadDashboardStats(),
+      loadRecommendedJobs(),
+      loadCurrentPreferences()
+    ]);
+    setupEventListeners();
+  } catch (error) {
+    console.error('Initialization error:', error);
+    showAlert('error', 'Failed to load dashboard');
+  }
+}
+
+// Authentication
 async function checkAuth() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
+  const token = localStorage.getItem('token');
+  if (!token) redirectToLogin();
 
-    try {
-        const response = await fetch(`${API_BASE}/users/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-        throw error;
-    }
+  try {
+    const response = await authenticatedFetch('/users/me');
+    state.user = await response.json();
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    redirectToLogin();
+  }
 }
 
-// Load User Data
+function redirectToLogin() {
+  localStorage.removeItem('token');
+  window.location.href = 'login.html';
+}
+
+// Data Loading
 async function loadUserData() {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE}/users/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch user data');
-
-        currentUser = await response.json();
-        document.getElementById('navUserName').textContent = currentUser.Name || 'User';
-
-        // Set profile image if it exists
-        if (currentUser.Image) {
-            // Convert ArrayBuffer to base64 and set as image source
-            const base64String = arrayBufferToBase64(currentUser.Image);
-            document.getElementById('navProfileImage').src = `data:image/jpeg;base64,${base64String}`;
-        } else {
-            // Set default avatar if no image exists
-            document.getElementById('navProfileImage').src = 'path/to/default-avatar.png';
-        }
-
-        // Load applicant data (if exists)
-        if (currentUser.UserID) {
-            try {
-                const applicantResponse = await fetch(`${API_BASE}/applicants/user/${currentUser.UserID}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                currentApplicant = applicantResponse.ok ? await applicantResponse.json() : null;
-            } catch (e) {
-                console.warn('Failed to load applicant data:', e);
-                currentApplicant = null;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        showAlert('error', 'Failed to load profile data');
+  try {
+    // First ensure we have user data
+    if (!state.user) {
+      const response = await authenticatedFetch('/users/me');
+      state.user = await response.json();
     }
+
+    // Only fetch applicant data if we have a UserID
+    if (state.user?.UserID) {
+      try {
+        const applicantResponse = await authenticatedFetch(`/applicants/user/${state.user.UserID}`);
+        state.applicant = await applicantResponse.json();
+      } catch (e) {
+        console.warn('No applicant data found for user');
+        state.applicant = null;
+      }
+    }
+
+    updateUI();
+  } catch (error) {
+    console.error('Error loading user data:', error);
+    handleProfileImageError();
+    throw error;
+  }
 }
 
-// Dashboard Statistics
+function updateUI() {
+  if (elements.navUserName) {
+    elements.navUserName.textContent = state.user?.Name || 'User';
+  }
+  updateProfileImage();
+}
+
+function updateProfileImage() {
+  if (!elements.navProfileImage) return;
+
+  elements.navProfileImage.src = state.user?.Image 
+    ? `data:image/jpeg;base64,${state.user.Image}`
+    : DEFAULT_AVATAR;
+
+  elements.navProfileImage.onerror = handleProfileImageError;
+}
+
+function handleProfileImageError() {
+  if (elements.navProfileImage) {
+    elements.navProfileImage.src = DEFAULT_AVATAR;
+  }
+  showAlert('error', 'Failed to load profile image');
+}
+
+// Dashboard Stats
 async function loadDashboardStats() {
-    const pendingEl = document.getElementById('pendingCount');
-    const nextStepEl = document.getElementById('nextStepCount');
-    const recommendedEl = document.getElementById('recommendedCount');
+  setDefaultStats();
+  
+  if (!state.applicant?.ApplicantID) return;
 
-    // Set defaults
-    pendingEl.textContent = 'N/A';
-    nextStepEl.textContent = 'N/A';
-    recommendedEl.textContent = recommendedJobs.length || 'N/A';
-
-    if (!currentApplicant?.ApplicantID) return;
-
-    try {
-        const response = await fetch(`${API_BASE}/applications/stats/${currentApplicant.ApplicantID}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        if (response.ok) {
-            const stats = await response.json();
-            pendingEl.textContent = stats.pending || 0;
-            nextStepEl.textContent = stats.nextStep || 0;
-        }
-    } catch (error) {
-        console.error('Error loading stats:', error);
-    }
+  try {
+    const response = await authenticatedFetch(`/applications/stats/${state.applicant.ApplicantID}`);
+    const stats = await response.json();
+    
+    elements.pendingCount.textContent = stats.pending || 0;
+    elements.nextStepCount.textContent = stats.nextStep || 0;
+    elements.recommendedCount.textContent = state.recommendedJobs.length || 0;
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
 }
 
-// Recommended Jobs
+// Set default stats
+function setDefaultStats() {
+    safeSetContent(elements.pendingCount, 'N/A');
+    safeSetContent(elements.nextStepCount, 'N/A');
+    safeSetContent(elements.recommendedCount, state.recommendedJobs.length || 'N/A');
+}
+
+// Helper function to set content safely
+function safeSetContent(element, value) {
+    if (element) element.textContent = value;
+}
+
+// Jobs
 async function loadRecommendedJobs() {
-    const container = document.getElementById('jobListingsContainer');
-    container.innerHTML = '<div class="loading-spinner"></div>';
+  showLoading(elements.jobListingsContainer);
 
-    try {
-        const response = await fetch(`${API_BASE}/jobs/recommended`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        recommendedJobs = response.ok ? await response.json() : [];
-        renderJobListings(recommendedJobs);
-    } catch (error) {
-        console.error('Error loading jobs:', error);
-        recommendedJobs = [];
-        renderJobListings([]);
-    }
+  try {
+    const response = await authenticatedFetch('/jobs/recommended');
+    state.recommendedJobs = await response.json();
+    renderJobListings(state.recommendedJobs);
+  } catch (error) {
+    console.error('Error loading jobs:', error);
+    state.recommendedJobs = [];
+    renderJobListings([]);
+  }
 }
 
-function renderJobListings(jobs) {
-    const container = document.getElementById('jobListingsContainer');
-    
-    if (!jobs || jobs.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-briefcase-slash"></i>
-                <p>No recommended jobs available</p>
-                <small>N/A</small>
-            </div>
-        `;
-        return;
-    }
+function renderJobListings(jobs = []) {
+  if (!elements.jobListingsContainer) return;
+  
+  if (!jobs.length) {
+    return showEmptyState(elements.jobListingsContainer, 'No recommended jobs available');
+  }
 
-    container.innerHTML = jobs.map(job => `
-        <div class="job-card" data-job-id="${job.JobID}">
-            <h4>${job.PositionType || 'No title'}</h4>
-            <p><i class="fas fa-map-marker-alt"></i> ${job.Location || 'Location not specified'}</p>
-            <p><i class="fas fa-money-bill-wave"></i> $${job.SalaryRange || '0'}</p>
-            <button class="btn btn-secondary view-job-btn">View Details</button>
-        </div>
-    `).join('');
+  elements.jobListingsContainer.innerHTML = jobs.map(job => `
+    <div class="job-card" data-job-id="${job.JobID}">
+      <h4>${job.PositionType || 'No title'}</h4>
+      <p><i class="fas fa-map-marker-alt"></i> ${job.Location || 'Location not specified'}</p>
+      <p><i class="fas fa-money-bill-wave"></i> $${job.SalaryRange || '0'}</p>
+      <button class="btn btn-secondary view-job-btn">View Details</button>
+    </div>
+  `).join('');
 
-    // Add event listeners
-    document.querySelectorAll('.view-job-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const jobId = btn.closest('.job-card').dataset.jobId;
-            viewJobDetails(jobId);
-        });
-    });
+  document.querySelectorAll('.view-job-btn').forEach(btn => {
+    btn.addEventListener('click', () => viewJobDetails(btn.closest('.job-card').dataset.jobId));
+  });
 }
 
-// Job Preferences
+// Preferences
 async function loadCurrentPreferences() {
-    const container = document.getElementById('currentPreferencesList');
+    if (!elements.currentPreferencesList) return;
     
-    try {
-        container.innerHTML = '<div class="empty-state">No preferences set</div>';
-        
-        if (!currentApplicant?.PreferredJobs) return;
-        
-        // First try to parse as JSON
-        let preferences;
-        try {
-            preferences = JSON.parse(currentApplicant.PreferredJobs);
-        } catch (e) {
-            // If parsing fails, try to handle as string
-            preferences = tryParseAlternativeFormat(currentApplicant.PreferredJobs);
-        }
-        
-        if (preferences?.length) {
-            container.innerHTML = preferences.map(pref => `
-                <div class="preference-item">
-                    ${pref.jobField ? `<p><strong>Field:</strong> ${pref.jobField}</p>` : ''}
-                    ${pref.jobType ? `<p><strong>Type:</strong> ${pref.jobType}</p>` : ''}
-                    ${pref.location ? `<p><strong>Location:</strong> ${pref.location}</p>` : ''}
-                    ${pref.salary ? `<p><strong>Salary:</strong> $${pref.salary}</p>` : ''}
-                </div>
-            `).join('');
-        }
-    } catch (error) {
-        console.error('Error loading preferences:', error);
-        container.innerHTML = '<div class="error-state">Error loading preferences</div>';
-    }
-}
-
-// View Job Details
-async function viewJobDetails(jobId) {
-    try {
-        const response = await fetch(`${API_BASE}/jobs/${jobId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        if (!response.ok) throw new Error('Job not found');
-
-        const job = await response.json();
-        // Populate modal with job details
-        // ... (your existing modal code)
-        
-        document.getElementById('jobModal').style.display = 'block';
-    } catch (error) {
-        console.error('Error loading job:', error);
-        showAlert('error', 'Could not load job details');
-    }
-}
-
-// Add this with your other main functions like loadRecommendedJobs()
-async function searchJobs() {
-    const searchTerm = document.getElementById('jobSearchInput').value;
-    const jobType = document.getElementById('jobTypeFilter').value;
-    const location = document.getElementById('locationFilter').value;
+    showEmptyState(elements.currentPreferencesList, 'No preferences set');
     
+    if (!state.applicant?.PreferredJobs) return;
+  
     try {
-        // Show loading state
-        const container = document.getElementById('jobListingsContainer');
-        container.innerHTML = '<div class="loading-spinner"></div>';
-        
-        // Build query params
-        const params = new URLSearchParams();
-        if (searchTerm) params.append('search', searchTerm);
-        if (jobType) params.append('type', jobType);
-        if (location) params.append('location', location);
-        
-        // Make API call
-        const response = await fetch(`${API_BASE}/jobs/search?${params.toString()}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Search failed');
-        
-        const jobs = await response.json();
-        renderJobListings(jobs);
-        
+      // First try to parse as JSON
+      let preferences;
+      try {
+          preferences = JSON.parse(state.applicant.PreferredJobs);
+      } catch (e) {
+          // If parsing fails, try to handle as string
+          preferences = tryParseAlternativeFormat(state.applicant.PreferredJobs);
+      }
+      
+      if (preferences?.length) {
+          elements.currentPreferencesList.innerHTML = preferences.map(pref => `
+              <div class="preference-item">
+                  ${pref.jobField ? `<p><strong>Field:</strong> ${pref.jobField}</p>` : ''}
+                  ${pref.jobType ? `<p><strong>Type:</strong> ${pref.jobType}</p>` : ''}
+                  ${pref.location ? `<p><strong>Location:</strong> ${pref.location}</p>` : ''}
+                  ${pref.salary ? `<p><strong>Salary:</strong> $${pref.salary}</p>` : ''}
+              </div>
+          `).join('');
+      }
     } catch (error) {
-        console.error('Search error:', error);
-        showAlert('error', 'Failed to search jobs');
-        renderJobListings([]);
+      console.error('Error loading preferences:', error);
+      showErrorState(elements.currentPreferencesList);
     }
-}
-
-// Event Listeners
-function setupEventListeners() {
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', function() {
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
-            
-            this.classList.add('active');
-            document.getElementById(`${this.dataset.section}Section`).classList.add('active');
-        });
-    });
-
-    // Profile dropdown
-    document.querySelector('.profile-tab').addEventListener('click', () => {
-        document.querySelector('.dropdown-content').classList.toggle('show');
-    });
-
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-    });
-
-    // Search button
-    document.getElementById('searchJobsBtn').addEventListener('click', searchJobs);
-
-    // Modal close
-    document.querySelector('.close-modal').addEventListener('click', () => {
-        document.getElementById('jobModal').style.display = 'none';
-    });
-
-    // Close dropdown when clicking outside
-    window.addEventListener('click', (e) => {
-        if (!e.target.matches('.profile-tab, .profile-tab *')) {
-            document.querySelector('.dropdown-content').classList.remove('show');
-        }
-    });
 }
 
 // Helper Functions
-function showAlert(type, message) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.innerHTML = `
-        <span>${message}</span>
-        <button class="close-alert">&times;</button>
-    `;
-    document.body.appendChild(alert);
-    
-    setTimeout(() => alert.remove(), 5000);
-    alert.querySelector('.close-alert').addEventListener('click', () => alert.remove());
+function authenticatedFetch(endpoint, options = {}) {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('No authentication token');
+
+  return fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+  }).then(response => {
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response;
+  });
 }
 
-// Helper function for non-standard JSON formats
+function showLoading(container) {
+  if (container) container.innerHTML = '<div class="loading-spinner"></div>';
+}
+
+function showEmptyState(container, message) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="empty-state">
+      <i class="fas fa-briefcase-slash"></i>
+      <p>${message}</p>
+      <small>N/A</small>
+    </div>
+  `;
+}
+
+function showErrorState(container) {
+  if (container) container.innerHTML = '<div class="error-state">Error loading data</div>';
+}
+
+function showAlert(type, message) {
+  const alert = document.createElement('div');
+  alert.className = `alert alert-${type}`;
+  alert.innerHTML = `
+    <span>${message}</span>
+    <button class="close-alert">&times;</button>
+  `;
+  document.body.appendChild(alert);
+  
+  setTimeout(() => alert.remove(), 5000);
+  alert.querySelector('.close-alert').addEventListener('click', () => alert.remove());
+}
+
 function tryParseAlternativeFormat(prefString) {
     // Case 1: Simple string without quotes
     if (typeof prefString === 'string' && !prefString.trim().startsWith('[')) {
@@ -334,19 +279,139 @@ function tryParseAlternativeFormat(prefString) {
     }
 }
 
-// Convert ArrayBuffer to Base64
-function arrayBufferToBase64(buffer) {
-    // Convert ArrayBuffer to base64 string
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
+// setupEventListeners():
+function setupEventListeners() {
+    setupNavigationListeners();
+    setupProfileDropdownListener();
+    setupLogoutListener();
+    setupSearchListener();
+    setupModalCloseListener();
+    setupDropdownCloseListener();
 }
 
-// Initialize
-function init() {
-    setupEventListeners();
+function setupNavigationListeners() {
+    const navItems = document.querySelectorAll('.nav-item');
+    if (!navItems.length) return;
+
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            removeActiveFromNavigationAndContent();
+            this.classList.add('active');
+            activateSection(this.dataset.section);
+        });
+    });
+}
+
+function setupProfileDropdownListener() {
+    const profileTab = document.querySelector('.profile-tab');
+    if (!profileTab) return;
+
+    profileTab.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent immediate close when clicking
+        toggleDropdownVisibility();
+    });
+}
+
+function setupLogoutListener() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+    });
+}
+
+function setupSearchListener() {
+    const searchBtn = document.getElementById('searchJobsBtn');
+    if (!searchBtn) return;
+
+    searchBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        searchJobs();
+    });
+}
+
+function setupModalCloseListener() {
+    const closeModal = document.querySelector('.close-modal');
+    if (!closeModal) return;
+
+    closeModal.addEventListener('click', hideModal);
+}
+
+function setupDropdownCloseListener() {
+    window.addEventListener('click', (e) => {
+        if (!e.target.matches('.profile-tab, .profile-tab *')) {
+            hideDropdown();
+        }
+    });
+}
+
+// Helper Functions
+function removeActiveFromNavigationAndContent() {
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+}
+
+function activateSection(sectionId) {
+    const section = document.getElementById(`${sectionId}Section`);
+    if (section) section.classList.add('active');
+}
+
+function toggleDropdownVisibility() {
+    const dropdown = document.querySelector('.dropdown-content');
+    if (dropdown) dropdown.classList.toggle('show');
+}
+
+function hideModal() {
+    const modal = document.getElementById('jobModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function hideDropdown() {
+    const dropdown = document.querySelector('.dropdown-content');
+    if (dropdown) dropdown.classList.remove('show');
+}
+
+// Job Details
+async function viewJobDetails(jobId) {
+  try {
+    const response = await authenticatedFetch(`/jobs/${jobId}`);
+    const job = await response.json();
+    
+    // Populate modal with job details
+    const modal = document.getElementById('jobModal');
+    if (modal) {
+      modal.style.display = 'block';
+      // Add your modal population logic here
+    }
+  } catch (error) {
+    console.error('Error loading job:', error);
+    showAlert('error', 'Could not load job details');
+  }
+}
+
+// Search Jobs
+async function searchJobs() {
+  const searchTerm = document.getElementById('jobSearchInput')?.value;
+  const jobType = document.getElementById('jobTypeFilter')?.value;
+  const location = document.getElementById('locationFilter')?.value;
+  
+  try {
+    showLoading(elements.jobListingsContainer);
+    
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (jobType) params.append('type', jobType);
+    if (location) params.append('location', location);
+    
+    const response = await authenticatedFetch(`/jobs/search?${params.toString()}`);
+    const jobs = await response.json();
+    renderJobListings(jobs);
+  } catch (error) {
+    console.error('Search error:', error);
+    showAlert('error', 'Failed to search jobs');
+    renderJobListings([]);
+  }
 }

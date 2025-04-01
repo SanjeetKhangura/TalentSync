@@ -232,7 +232,7 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 // Get current user (for authentication check)
 app.get('/users/me', authenticateToken, (req, res) => {
-  pool.query('SELECT * FROM users WHERE UserID = ?', [req.user.userId], (err, results) => {
+  pool.query('SELECT UserID, Name, Email, Phone, Role, Image FROM users WHERE UserID = ?', [req.user.userId], (err, results) => {
     if (err) {
       console.error('DB Error:', err);
       return res.status(500).json({ error: 'Database error' });
@@ -240,7 +240,10 @@ app.get('/users/me', authenticateToken, (req, res) => {
     if (!results.length) return res.status(404).json({ error: 'User not found' });
     
     const user = results[0];
-    delete user.Password;
+    // Convert binary image data to base64 if it exists
+    if (user.Image) {
+      user.Image = user.Image.toString('base64');
+    }
     res.json(user);
   });
 });
