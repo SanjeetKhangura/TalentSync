@@ -313,11 +313,9 @@ app.get('/jobs/recommended', authenticateToken, async (req, res) => {
       return res.json([]);
     }
 
+    // Simple query without sorting (since we have no numeric/date columns)
     const [jobs] = await pool.promise().query(
-      `SELECT * FROM jobs 
-       WHERE CloseDate > NOW() 
-       ORDER BY PostDate DESC 
-       LIMIT 10`
+      `SELECT * FROM jobs LIMIT 10`
     );
     
     res.json(jobs || []);
@@ -400,6 +398,39 @@ app.get('/applications/applicant/:applicantId', authenticateToken, (req, res) =>
       
       res.json(results);
   });
+});
+
+// Update applicant preferences
+app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, res) => {
+  try {
+    const { preferences } = req.body;
+    const applicantId = req.params.applicantId;
+
+    // Verify the applicant belongs to the authenticated user
+    const [applicant] = await pool.promise().query(
+      'SELECT UserID FROM applicant WHERE ApplicantID = ?',
+      [applicantId]
+    );
+
+    if (!applicant.length) {
+      return res.status(404).json({ message: 'Applicant not found' });
+    }
+
+    if (applicant[0].UserID !== req.user.userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Update preferences
+    await pool.promise().query(
+      'UPDATE applicant SET PreferredJobs = ? WHERE ApplicantID = ?',
+      [preferences, applicantId]
+    );
+
+    res.json({ message: 'Preferences updated successfully' });
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+    res.status(500).json({ message: 'Error updating preferences' });
+  }
 });
 
 // Middleware to authenticate JWT token - Updated

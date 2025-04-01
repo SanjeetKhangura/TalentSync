@@ -4,7 +4,8 @@ const DEFAULT_AVATAR = '/Assets/default-avatar.png';
 const state = {
   user: null,
   applicant: null,
-  recommendedJobs: []
+  recommendedJobs: [],
+  currentPreferences: []
 };
 
 // DOM Elements
@@ -110,20 +111,20 @@ function handleProfileImageError() {
 
 // Dashboard Stats
 async function loadDashboardStats() {
-  setDefaultStats();
-  
-  if (!state.applicant?.ApplicantID) return;
-
-  try {
-    const response = await authenticatedFetch(`/applications/stats/${state.applicant.ApplicantID}`);
-    const stats = await response.json();
+    setDefaultStats();
     
-    elements.pendingCount.textContent = stats.pending || 0;
-    elements.nextStepCount.textContent = stats.nextStep || 0;
-    elements.recommendedCount.textContent = state.recommendedJobs.length || 0;
-  } catch (error) {
-    console.error('Error loading stats:', error);
-  }
+    if (!state.applicant?.ApplicantID) return;
+  
+    try {
+      const response = await authenticatedFetch(`/applications/stats/${state.applicant.ApplicantID}`);
+      const stats = await response.json();
+      
+      elements.pendingCount.textContent = stats.pending || 0;
+      elements.nextStepCount.textContent = stats.nextStep || 0;
+      elements.recommendedCount.textContent = state.recommendedJobs.length || 0;
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
 }
 
 // Set default stats
@@ -161,11 +162,11 @@ function renderJobListings(jobs = []) {
   }
 
   elements.jobListingsContainer.innerHTML = jobs.map(job => `
-    <div class="job-card" data-job-id="${job.JobID}">
-      <h4>${job.PositionType || 'No title'}</h4>
-      <p><i class="fas fa-map-marker-alt"></i> ${job.Location || 'Location not specified'}</p>
-      <p><i class="fas fa-money-bill-wave"></i> $${job.SalaryRange || '0'}</p>
-      <button class="btn btn-secondary view-job-btn">View Details</button>
+    <div class="job-card">
+      <h4>${job.JobField || 'No title'}</h4>
+      <p><i class="fas fa-briefcase"></i> ${job.JobType || 'Type not specified'}</p>
+      <p><i class="fas fa-map-marker-alt"></i> ${job.Location || 'Remote'}</p>
+      <p><i class="fas fa-money-bill-wave"></i> $${job.Salary || '0'}</p>
     </div>
   `).join('');
 
@@ -176,36 +177,42 @@ function renderJobListings(jobs = []) {
 
 // Preferences
 async function loadCurrentPreferences() {
-    if (!elements.currentPreferencesList) return;
-    
-    showEmptyState(elements.currentPreferencesList, 'No preferences set');
-    
-    if (!state.applicant?.PreferredJobs) return;
-  
     try {
-      // First try to parse as JSON
-      let preferences;
-      try {
-          preferences = JSON.parse(state.applicant.PreferredJobs);
-      } catch (e) {
-          // If parsing fails, try to handle as string
-          preferences = tryParseAlternativeFormat(state.applicant.PreferredJobs);
+      if (!state.applicant?.PreferredJobs) {
+        state.currentPreferences = [];
+        renderPreferenceCards();
+        return;
       }
-      
-      if (preferences?.length) {
-          elements.currentPreferencesList.innerHTML = preferences.map(pref => `
-              <div class="preference-item">
-                  ${pref.jobField ? `<p><strong>Field:</strong> ${pref.jobField}</p>` : ''}
-                  ${pref.jobType ? `<p><strong>Type:</strong> ${pref.jobType}</p>` : ''}
-                  ${pref.location ? `<p><strong>Location:</strong> ${pref.location}</p>` : ''}
-                  ${pref.salary ? `<p><strong>Salary:</strong> $${pref.salary}</p>` : ''}
-              </div>
-          `).join('');
-      }
+  
+      const prefs = tryParseAlternativeFormat(state.applicant.PreferredJobs);
+      state.currentPreferences = Array.isArray(prefs) ? prefs : [];
+      renderPreferenceCards();
     } catch (error) {
       console.error('Error loading preferences:', error);
       showErrorState(elements.currentPreferencesList);
     }
+}
+
+function renderPreferenceCards() {
+    const container = document.getElementById('preferencesCards');
+    container.innerHTML = state.currentPreferences.map((pref, index) => `
+      <div class="preference-card" data-index="${index}">
+        <button class="delete-pref-btn" data-index="${index}">
+          <i class="fas fa-times"></i>
+        </button>
+        ${pref.jobField ? `<p><strong>Field:</strong> ${pref.jobField}</p>` : ''}
+        ${pref.jobType ? `<p><strong>Type:</strong> ${pref.jobType}</p>` : ''}
+        ${pref.location ? `<p><strong>Location:</strong> ${pref.location}</p>` : ''}
+      </div>
+    `).join('');
+  
+    // Add delete handlers
+    document.querySelectorAll('.delete-pref-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deletePreference(btn.dataset.index);
+      });
+    });
 }
 
 // Helper Functions
@@ -287,6 +294,8 @@ function setupEventListeners() {
     setupSearchListener();
     setupModalCloseListener();
     setupDropdownCloseListener();
+
+    document.getElementById('preferencesForm')?.addEventListener('submit', savePreferences);
 }
 
 function setupNavigationListeners() {
@@ -346,6 +355,58 @@ function setupDropdownCloseListener() {
             hideDropdown();
         }
     });
+}
+
+async function savePreferences(e) {
+    e.preventDefault();
+    
+    if (state.currentPreferences.length >= 3) {
+      showAlert('error', 'Maximum 3 preferences allowed. Delete one to add another.');
+      return;
+    }
+  
+    const newPref = {
+      jobField: document.getElementById('prefJobField').value,
+      jobType: document.getElementById('prefJobType').value,
+      location: document.getElementById('prefLocation').value
+    };
+  
+    try {
+      state.currentPreferences.push(newPref);
+      await updatePreferencesOnServer();
+      document.getElementById('preferencesForm').reset();
+    } catch (error) {
+      state.currentPreferences.pop(); // Rollback if error
+      console.error('Error saving preferences:', error);
+      showAlert('error', 'Failed to save preferences');
+    }
+}
+
+// Delete preference
+async function deletePreference(index) {
+    state.currentPreferences.splice(index, 1);
+    await updatePreferencesOnServer();
+}
+
+// Sync with server
+async function updatePreferencesOnServer() {
+    try {
+      const response = await authenticatedFetch(
+        `/applicants/${state.applicant.ApplicantID}/preferences`, 
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            preferences: JSON.stringify(state.currentPreferences)
+          })
+        }
+      );
+      renderPreferenceCards();
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+      showAlert('error', 'Failed to update preferences');
+      // Reload from server to sync
+      await loadUserData();
+    }
 }
 
 // Helper Functions
