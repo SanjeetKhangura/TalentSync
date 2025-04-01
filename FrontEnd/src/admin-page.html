@@ -3,85 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TalentSync - Employee Central</title>
-    <link rel="stylesheet" href="adminstyle.css">
+    <link rel="stylesheet" href="adminstyles.css">
+    <title>TalentSync</title>
 </head>
-
 <body>
-    <div class="header">
-        <nav class="nav-left">
-            <ul>
-                <li>Reports</li>
-                <li>Account Management</li>
-                <li>Profile</li>
-            </ul>
-        </nav>
-        <div class="title-right">
-            <h1>TalentSync</h1>
-            <h2>Employee Central</h2>
-            <h3>Administrator</h3>
+    <header>
+        <h1>TalentSync</h1>
+        <h2>Employee Central - Administrator</h2>
+        <div class="icon-wrapper">
+            <a href="#">📧 Mail</a>
+            <a href="#">📄 Reports</a>
+            <a href="#">👤 Account Management</a>
+            <a href="#">🔑 Profile</a>
         </div>
-    </div>
+    </header>
     
-    <main class="dashboard">
-        <section class="job-posts quadrant">
-            <h4>Job Posts</h4>
+    <main>
+        <section class="job-posts">
+            <h2>Job Posts</h2>
             <button>Filters / Sort +</button>
-            <div class="job-post">
-                <h5 class="job-title">Project Manager</h5>
-                <p class="job-description">Description</p>
-                <button class="edit-btn">Edit</button>
+            <div class="job">
+                <p>Project Manager</p>
+                <p>Description</p>
+                <button class="edit-button">Edit</button>
             </div>
-            <div class="job-post">
-                <h5 class="job-title">Machine Operator</h5>
-                <p class="job-description">Description</p>
-                <button class="edit-btn">Edit</button>
+            <div class="job">
+                <p>Machine Operator</p>
+                <p>Description</p>
+                <button class="edit-button">Edit</button>
             </div>
-            <div class="job-post">
-                <h5 class="job-title">Network Administrator</h5>
-                <p class="job-description">Description</p>
-                <button class="edit-btn">Edit</button>
-            </div>
-        </section>
-        
-        <section class="categories quadrant">
-            <h4>Categories</h4>
-            <div class="category">
-                <h5 class="category-title">Information Technology</h5>
-                <p class="category-description">Brief Description</p>
-                <button class="edit-btn">Edit</button>
-            </div>
-            <div class="category">
-                <h5 class="category-title">Engineering</h5>
-                <p class="category-description">Brief Description</p>
-                <button class="edit-btn">Edit</button>
+            <div class="job">
+                <p>Network Administrator</p>
+                <p>Description</p>
+                <button class="edit-button">Edit</button>
             </div>
         </section>
-        
-        <section class="hr-staff quadrant">
-            <h4>HR Staff</h4>
-            <div class="staff">
-                <span>ID1</span>
-                <span>ID2</span>
-                <span>ID3</span>
-                <span>ID4</span>
-            </div>
-        </section>
-        
-        <section class="notifications quadrant">
-            <h4>Notifications</h4>
-            <div class="notification">
-                <h5 class="notification-title">Request For Removal - HR</h5>
-                <p class="notification-description">Description</p>
 
+        <section class="categories">
+            <h2>Categories</h2>
+            <div class="category">
+                <p>Information Technology</p>
+                <p>Brief Description</p>
+                <button class="edit-button">Edit</button>
+            </div>
+            <div class="category">
+                <p>Engineering</p>
+                <p>Brief Description</p>
+                <button class="edit-button">Edit</button>
+            </div>
+        </section>
+
+        <section class="hr-staff">
+            <h2>HR Staff</h2>
+            <div class="staff-member">
+                <div class="avatar"></div>
+                <p>ID</p>
+                <p>Initials</p>
+            </div>
+            <div class="staff-member">
+                <div class="avatar"></div>
+                <p>ID</p>
+                <p>Initials</p>
+            </div>
+        </section>
+
+        <section class="notifications">
+            <h2>Notifications</h2>
+            <div class="notification">
+                <p>Request For Removal - HR</p>
+                <p>Brief Description</p>
+                <button class="remove-button">X</button>
             </div>
             <div class="notification">
-                <h5 class="notification-title">Notice</h5>
-                <p class="notification-description">Description</p>
-
+                <p>Notice</p>
+                <p>Brief Description</p>
+                <button class="remove-button">X</button>
             </div>
         </section>
     </main>
+
     <script src="script.js"></script>
 </body>
 </html>
