@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="adminstyle.css">
     <title>TalentSync</title>
 </head>
+
+<!-----Header with title and navigation menu----->
 <body>
     <header>
         <h1>TalentSync</h1>
@@ -19,69 +21,108 @@
     </header>
     
     <main>
-        <section class="job-posts">
+        <!-----Job posts quadrant----->
+        <section class="job-posts-container">
             <h2>Job Posts</h2>
-            <button>Filters / Sort +</button>
-            <div class="job">
-                <p>Project Manager</p>
-                <p>Description</p>
-                <button class="edit-button">Edit</button>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+                <button class="filter-button">Filters / Sort +</button>
             </div>
-            <div class="job">
-                <p>Machine Operator</p>
-                <p>Description</p>
-                <button class="edit-button">Edit</button>
-            </div>
-            <div class="job">
-                <p>Network Administrator</p>
-                <p>Description</p>
-                <button class="edit-button">Edit</button>
+            <div class="job-posts-content">
+                <div class="job">
+                    <p>Project Manager</p>
+                    <p>Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
+                <div class="job">
+                    <p>Machine Operator</p>
+                    <p>Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
+                <div class="job">
+                    <p>Network Administrator</p>
+                    <p>Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
             </div>
         </section>
-
-        <section class="categories">
+        
+        <!-----Categories quadrant----->
+        <section class="categories-container">
             <h2>Categories</h2>
-            <div class="category">
-                <p>Information Technology</p>
-                <p>Brief Description</p>
-                <button class="edit-button">Edit</button>
+            <div class="search-bar">
+                <input type="text" placeholder="Search: Business, Engineering, ...">
             </div>
-            <div class="category">
-                <p>Engineering</p>
-                <p>Brief Description</p>
-                <button class="edit-button">Edit</button>
+            <div class="categories-content">
+                <div class="category">
+                    <p>Information Technology</p>
+                    <p>Brief Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
+                <div class="category">
+                    <p>Engineering</p>
+                    <p>Brief Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
+                <div class="category">
+                    <p>Management</p>
+                    <p>Brief Description</p>
+                    <button class="edit-button">Edit</button>
+                </div>
             </div>
         </section>
-
-        <section class="hr-staff">
+        
+        <!-----HR staff quadrant----->
+        <section class="hr-staff-container">
             <h2>HR Staff</h2>
-            <div class="staff-member">
-                <div class="avatar"></div>
-                <p>ID</p>
-                <p>Initials</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search: ID, Name">
             </div>
-            <div class="staff-member">
-                <div class="avatar"></div>
-                <p>ID</p>
-                <p>Initials</p>
-            </div>
+            <div class="hr-staff-content">
+                <div class="staff-member">
+                    <div class="avatar">👤</div>
+                    <p># 001</p>
+                    <p>John Doe</p>
+                </div>
+                <div class="staff-member">
+                    <div class="avatar">👤</div>
+                    <p># 002</p>
+                    <p>Jane Smith</p>
+                </div>
+                <div class="staff-member">
+                    <div class="avatar">👤</div>
+                        <p># 003</p>
+                        <p>Michael Brown</p>
+                    </div>
+                <div class="staff-member">
+                    <div class="avatar">👤</div>
+                        <p># 004</p>
+                        <p>Emily White</p>
+                    </div>
+                </div>
         </section>
 
-        <section class="notifications">
+        <!-----Notifications quadrant----->
+        <section class="notifications-container">
             <h2>Notifications</h2>
-            <div class="notification">
-                <p>Request For Removal - HR</p>
-                <p>Brief Description</p>
-                <button class="remove-button">X</button>
+            <div class="search-bar">
+                <input type="text" placeholder="Search Notifications...">
             </div>
-            <div class="notification">
-                <p>Notice</p>
-                <p>Brief Description</p>
-                <button class="remove-button">X</button>
+            <div class="notifications-content">
+                <div class="notification">
+                    <p>Request For Removal - HR</p>
+                    <p>Brief Description</p>
+                    <button class="remove-button">X</button>
+                </div>
+                <div class="notification">
+                    <p>Notice</p>
+                    <p>Brief Description</p>
+                    <button class="remove-button">X</button>
+                </div>
             </div>
         </section>
     </main>
 
-    <script src="admin-page.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

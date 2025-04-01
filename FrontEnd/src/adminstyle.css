@@ -1,3 +1,4 @@
+/* Overall body color and font */
 body {
     font-family: Arial, sans-serif;
     background-color: #f2f2f2;
@@ -5,13 +6,15 @@ body {
     padding: 0;
 }
 
+/* Header style */
 header {
     background-color: #2c3e50;
     color: white;
-    padding: 20px;
+    padding: 1px;
     text-align: center;
 }
 
+/* Main container style */
 main {
     display: flex;
     flex-wrap: wrap;
@@ -19,40 +22,123 @@ main {
     padding: 20px;
 }
 
+/* Section style (represents each quadrants) */
 section {
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin: 10px;
+    margin: 15px;
     padding: 20px;
-    flex: 0 1 30%;
+    flex: 1 0 calc(45% - 30px); /* Updated width for better responsiveness */
     min-width: 250px;
 }
 
-.icon-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 10px 0;
-    font-size: 24px;
+/* Container Styles */
+.job-posts-container, .categories-container, .notifications-container {
+    background-color: #2c3e50;
+    border-radius: 10px; /* Rounded corners */
+    padding: 15px; /* Spacing inside the container */
+    max-width: 600px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow effect */
 }
 
-.icon-wrapper a {
-    margin: 0 10px;
-    color: #ffffff;
-    text-decoration: none;
+/* HR Staff Container Styles */
+.hr-staff-container {
+    background-color: #2c3e50;
+    border-radius: 10px; /* Rounded corners */
+    padding: 15px; /* Spacing inside the container */
+    max-width: 600px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow effect */
+    margin: 15px;
 }
 
-.icon-wrapper a:hover {
-    text-decoration: underline;
-    color: lightgray;
+/* Heading style */
+.job-posts-container h2, .categories-container h2, .notifications-container h2, .hr-staff-container h2 {
+    color: #ecf0f1; /* Color for the heading */
+    text-align: center; /* Center align text */
+    margin: 0 0 20px; /* Margin below heading */
 }
 
+/* Content styles */
+.job-posts-content, .categories-content, .notifications-content {
+    background-color: #ffffff;
+    border-radius: 5px; /* Slightly rounded corners */
+    height: 300px;
+    overflow: auto; /* Scroll if content exceeds height */
+    padding: 10px; /* Some padding inside content */
+}
+
+/* Content styles for HR Staff */
+.hr-staff-content {
+    background-color: #ffffff;
+    border-radius: 5px; /* Slightly rounded corners */
+    height: 300px;
+    overflow: auto; /* Scroll if content exceeds height */
+    padding: 10px; /* Some padding inside content */
+    display: grid; /* Use grid for layout for HR*/
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsive grid */
+    gap: 10px; /* Gap between Staff */
+}
+
+/* Staff Member Styles */
+.staff-member {
+    background-color: #e0e0e0;
+    border-radius: 20px; /* More rounded */
+    padding: 15px; /* Increased padding */
+    text-align: center; /* Center text */
+    height: 100px; /* Fixed height for uniformity */
+}
+
+.staff-member {
+    background-color: #e0e0e0;
+    border-radius: 15px; /* Increased radius */
+    padding: 20px; /* Adjusted padding for better aesthetics */
+    text-align: center; /* Center text */
+    height: 120px; /* Adjusted height for a balanced look */
+    border: 1px solid #b0b0b0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+}
+
+/*Item Styles */
 .job, .category, .notification {
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 20px; /* Spacing between items */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional shadow */
+    height: 120px; /* Fixed height for uniformity */
+    display: flex; /* Use flex to align contents */
+    flex-direction: column; /* Align items vertically */
+    justify-content: space-between; /* Evenly space out content */
+}
+
+.category p {
+    margin: 0; /* Removes default margin */
+}
+
+/* Search Bar Styles */
+.search-bar {
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 10px;
 }
+.search-bar input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+}
 
+.hr-staff-container .search-bar input {
+    padding: 8px;
+    border: none;
+    border-radius: 5px; /* Rounded edges */
+}
+
+/* Edit and Remove Button Styles */
 .edit-button, .remove-button {
-    background-color: #007bff;
+    background-color: #2c3e50;
     color: white;
     border: none;
     border-radius: 5px;
@@ -65,9 +151,27 @@ section {
 }
 
 .avatar {
-    width: 50px;
-    height: 50px;
-    background-color: #dedede;
-    border-radius: 50%;
+    width: 50px; 
+    height: 50px; 
+    background-color: #dedede; 
+    border-radius: 50%; 
+    margin: 0 auto 10px; 
+    border: 2px solid white; 
+}
+
+/* Additional classes */
+.icon-wrapper {
+    display: flex;
+    justify-content: center;
     margin: 10px 0;
+    font-size: 20px;
+}
+.icon-wrapper a {
+    margin: 0 10px;
+    color: #ffffff;
+    text-decoration: none;
+}
+.icon-wrapper a:hover {
+    text-decoration: underline;
+    color: lightgray;
 }
