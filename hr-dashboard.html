@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="hrstyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>TalentSync - Human Resources</title>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-titles">
+                <h1>TalentSync</h1>
+                <h2>Employee Central - Human Resources</h2>
+            </div>
+            <div class="icon-wrapper">
+                <a href="#"><i class="fas fa-home"></i> Home</a>
+                <a href="#"><i class="fas fa-envelope"></i> Mail</a>
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Job posts quadrant -->
+        <section class="job-posts-container">
+            <h2>Job Posts</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+                <button class="filter-button">Filters</button>
+                <button class="create-button">+</button>
+            </div>
+            <div class="job-posts-content">
+                <div class="job">
+                    <h3 class="job-title">Project Manager</h3>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="job">
+                    <h3 class="job-title">Machine Operator</h3>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="job">
+                    <h3 class="job-title">Engineer</h3>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Applicants quadrant -->
+        <section class="applications-container">
+            <h2>Applications</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="Search...">
+                <button class="filter-button">Filters</button>
+            </div>
+            <div class="applications-content">
+                <div class="application">
+                    <h3 class="application-title">Project Manager</h3>
+                    <p class="application-description">Applications: 5</p>
+                    <div class="button-wrapper">
+                        <button class="view-button">View</button>
+                    </div>
+                </div>
+                <div class="application">
+                    <h3 class="application-title">Farmer</h3>
+                    <p class="application-description">Applications: 3</p>
+                    <div class="button-wrapper">
+                        <button class="view-button">View</button>
+                    </div>
+                </div>
+                <div class="application">
+                    <h3 class="application-title">Machine Operator</h3>
+                    <p class="application-description">Applications: 8</p>
+                    <div class="button-wrapper">
+                        <button class="view-button">View</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View applicants quadrant -->
+        <section class="view-applicants-container">
+            <h2>View Applicants</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="Search: Name, Due Date, Category">
+                <button class="create-button">+</button>
+            </div>
+            <div class="view-applicant-content">
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p class="name">John McDavis</p>
+                    <p class="details">Application Due Date | Category</p>
+                    <button class="details-button">Details</button>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p class="name">John McDavis</p>
+                    <p class="details">Application Due Date | Category</p>
+                    <button class="details-button">Details</button>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p class="name">John McDavis</p>
+                    <p class="details">Application Due Date | Category</p>
+                    <button class="details-button">Details</button>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p class="name">John McDavis</p>
+                    <p class="details">Application Due Date | Category</p>
+                    <button class="details-button">Details</button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Notifications quadrant -->
+        <section class="notifications-container">
+            <h2>Notifications</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="Search Notifications...">
+            </div>
+            <div class="notifications-content">
+                <div class="notification">
+                    <h3 class="notification-title">Request For Removal - HR</h3>
+                    <p class="notification-description">There’s a job post...</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="notification">
+                    <h3 class="notification-title">Notice</h3>
+                    <p class="notification-description">Everyone in room...</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="hr-dashboard.js"></script>
+</body>
+
+</html>
