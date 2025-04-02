@@ -1,17 +1,14 @@
 document.getElementById('loginForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
-  // Get form elements
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
   const responseMessage = document.getElementById('responseMessage');
   const submitButton = document.querySelector('button[type="submit"]');
 
   // Clear previous messages
-  if (responseMessage) {
-    responseMessage.textContent = '';
-    responseMessage.className = 'message'; // Reset to base message class
-  }
+  responseMessage.textContent = '';
+  responseMessage.className = 'message';
 
   // Validate inputs
   if (!emailInput.value || !passwordInput.value) {
@@ -19,7 +16,6 @@ document.getElementById('loginForm').addEventListener('submit', async function (
     return;
   }
 
-  // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(emailInput.value)) {
     showError('Please enter a valid email address');
@@ -31,6 +27,9 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   submitButton.textContent = 'Loading...';
 
   try {
+    console.log('Sending login request...');
+    const startTime = Date.now();
+    
     const response = await fetch('http://localhost:3000/login', {
       method: 'POST',
       headers: {
@@ -42,59 +41,50 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       })
     });
 
-    const result = await response.json();
+    console.log(`Response received after ${Date.now() - startTime}ms`);
+    
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Server did not return JSON');
+    }
 
-    // Handle response
+    const result = await response.json();
+    console.log('Login result:', result);
+
     if (!response.ok) {
-      throw new Error(result.message || 'Login failed. Please try again.');
+      throw new Error(result.message || `Login failed with status ${response.status}`);
     }
 
     // Store token securely
     localStorage.setItem('token', result.token);
-    console.log('Login successful, token stored');
+    console.log('Token stored, redirecting...');
 
-    // Show success message
     showSuccess('Login successful! Redirecting...');
-
-    // Redirect based on role
-    setTimeout(() => {
-      if (result.redirect) {
-        window.location.href = result.redirect;
-      } else {
-        // Fallback if redirect URL not provided
-        const dashboardMap = {
-          'Applicant': 'applicant-dashboard.html',
-          'HR': 'hr-dashboard.html',
-          'Admin': 'admin-dashboard.html'
-        };
-        window.location.href = dashboardMap[result.role] || 'login.html';
-      }
-    }, 1500);
+    
+    // Immediate redirect without timeout
+    window.location.href = result.redirect || 'login.html';
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error details:', {
+      error: error.message,
+      stack: error.stack
+    });
+    
     showError(error.message || 'An error occurred during login.');
-  } finally {
+    
+    // Reset button even on error
     submitButton.disabled = false;
     submitButton.textContent = 'Login';
   }
 
-  // Helper functions
   function showError(message) {
-    if (responseMessage) {
-      responseMessage.textContent = message;
-      responseMessage.classList.add('error-message');
-    } else {
-      console.error('Response message element not found');
-    }
+    responseMessage.textContent = message;
+    responseMessage.classList.add('error-message');
   }
 
   function showSuccess(message) {
-    if (responseMessage) {
-      responseMessage.textContent = message;
-      responseMessage.classList.add('success-message');
-    } else {
-      console.error('Response message element not found');
-    }
+    responseMessage.textContent = message;
+    responseMessage.classList.add('success-message');
   }
 });

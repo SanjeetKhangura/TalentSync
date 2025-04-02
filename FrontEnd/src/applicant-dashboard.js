@@ -59,30 +59,33 @@ function redirectToLogin() {
 
 // Data Loading
 async function loadUserData() {
-  try {
-    // First ensure we have user data
-    if (!state.user) {
-      const response = await authenticatedFetch('/users/me');
-      state.user = await response.json();
-    }
-
-    // Only fetch applicant data if we have a UserID
-    if (state.user?.UserID) {
-      try {
-        const applicantResponse = await authenticatedFetch(`/applicants/user/${state.user.UserID}`);
-        state.applicant = await applicantResponse.json();
-      } catch (e) {
-        console.warn('No applicant data found for user');
-        state.applicant = null;
+    try {
+      if (!state.user) {
+        const response = await authenticatedFetch('/users/me');
+        state.user = await response.json();
       }
+  
+      if (state.user?.UserID) {
+        try {
+          const applicantResponse = await authenticatedFetch(`/applicants/user/${state.user.UserID}`);
+          const data = await applicantResponse.json();
+          
+          // Handle both old and new preference formats during transition
+          state.applicant = {
+            ...data,
+          };
+        } catch (e) {
+          console.warn('No applicant data found for user');
+          state.applicant = null;
+        }
+      }
+  
+      updateUI();
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      handleProfileImageError();
+      throw error;
     }
-
-    updateUI();
-  } catch (error) {
-    console.error('Error loading user data:', error);
-    handleProfileImageError();
-    throw error;
-  }
 }
 
 function updateUI() {
@@ -111,27 +114,41 @@ function handleProfileImageError() {
 
 // Dashboard Stats
 async function loadDashboardStats() {
-    setDefaultStats();
-    
-    if (!state.applicant?.ApplicantID) return;
-  
     try {
-      const response = await authenticatedFetch(`/applications/stats/${state.applicant.ApplicantID}`);
-      const stats = await response.json();
-      
-      elements.pendingCount.textContent = stats.pending || 0;
-      elements.nextStepCount.textContent = stats.nextStep || 0;
-      elements.recommendedCount.textContent = state.recommendedJobs.length || 0;
+        if (!state.applicant?.ApplicantID) {
+            setDefaultStats();
+            return;
+        }
+
+        const stats = await fetchDashboardStats(state.applicant.ApplicantID);
+        updateStatsUI(stats);
     } catch (error) {
-      console.error('Error loading stats:', error);
+        console.error('Error loading stats:', error);
+        setDefaultStats();
+        showAlert('error', 'Failed to load application stats');
     }
 }
 
-// Set default stats
+async function fetchDashboardStats(applicantId) {
+    const response = await authenticatedFetch(`/applications/stats/${applicantId}`);
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+}
+
+function updateStatsUI(stats) {
+    safeSetContent(elements.pendingCount, stats.pending || 0);
+    safeSetContent(elements.nextStepCount, stats.nextStep || 0);
+    safeSetContent(elements.recommendedCount, state.recommendedJobs?.length || 0);
+}
+
 function setDefaultStats() {
-    safeSetContent(elements.pendingCount, 'N/A');
-    safeSetContent(elements.nextStepCount, 'N/A');
-    safeSetContent(elements.recommendedCount, state.recommendedJobs.length || 'N/A');
+    if (elements.pendingCount) elements.pendingCount.textContent = '0';
+    if (elements.nextStepCount) elements.nextStepCount.textContent = '0';
+    if (elements.recommendedCount) {
+      elements.recommendedCount.textContent = state.recommendedJobs?.length || '0';
+    }
 }
 
 // Helper function to set content safely
@@ -141,17 +158,19 @@ function safeSetContent(element, value) {
 
 // Jobs
 async function loadRecommendedJobs() {
-  showLoading(elements.jobListingsContainer);
-
-  try {
-    const response = await authenticatedFetch('/jobs/recommended');
-    state.recommendedJobs = await response.json();
-    renderJobListings(state.recommendedJobs);
-  } catch (error) {
-    console.error('Error loading jobs:', error);
-    state.recommendedJobs = [];
-    renderJobListings([]);
-  }
+    try {
+      const response = await authenticatedFetch('/jobs/recommended');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      state.recommendedJobs = await response.json();
+      renderJobListings(state.recommendedJobs);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+      showAlert('error', 'Failed to load recommended jobs. Please try again.');
+      state.recommendedJobs = [];
+      renderJobListings([]);
+    }
 }
 
 function renderJobListings(jobs = []) {
@@ -178,40 +197,97 @@ function renderJobListings(jobs = []) {
 // Preferences
 async function loadCurrentPreferences() {
     try {
-      if (!state.applicant?.PreferredJobs) {
+      if (!state.applicant?.ApplicantID) {
         state.currentPreferences = [];
         renderPreferenceCards();
         return;
       }
   
-      const prefs = tryParseAlternativeFormat(state.applicant.PreferredJobs);
-      state.currentPreferences = Array.isArray(prefs) ? prefs : [];
-      renderPreferenceCards();
+      const response = await authenticatedFetch(
+        `/applicants/${state.applicant.ApplicantID}/preferences`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+  
+      state.currentPreferences = await response.json();
+      renderPreferenceCards(); // This will update the UI
+      
     } catch (error) {
       console.error('Error loading preferences:', error);
-      showErrorState(elements.currentPreferencesList);
+      showAlert('error', 'Failed to load preferences');
+      state.currentPreferences = [];
+      renderPreferenceCards();
     }
 }
 
 function renderPreferenceCards() {
     const container = document.getElementById('preferencesCards');
-    container.innerHTML = state.currentPreferences.map((pref, index) => `
-      <div class="preference-card" data-index="${index}">
-        <button class="delete-pref-btn" data-index="${index}">
-          <i class="fas fa-times"></i>
-        </button>
-        ${pref.jobField ? `<p><strong>Field:</strong> ${pref.jobField}</p>` : ''}
-        ${pref.jobType ? `<p><strong>Type:</strong> ${pref.jobType}</p>` : ''}
-        ${pref.location ? `<p><strong>Location:</strong> ${pref.location}</p>` : ''}
-      </div>
-    `).join('');
-  
+    if (!container) {
+        console.error('Preferences container not found');
+        return;
+    }
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    // Add preference count header
+    const countHeader = document.createElement('div');
+    countHeader.className = 'preferences-header';
+    countHeader.innerHTML = `
+        <h3>Job Preferences</h3>
+        <div class="preference-count">
+            ${state.currentPreferences.length}/3 used
+            ${state.currentPreferences.length >= 3 ? 
+                '<span class="limit-reached">(Limit reached)</span>' : 
+                '<span class="limit-remaining">(You can add ' + (3 - state.currentPreferences.length) + ' more)</span>'
+            }
+        </div>
+    `;
+    container.appendChild(countHeader);
+
+    // Handle empty state
+    if (!state.currentPreferences || state.currentPreferences.length === 0) {
+        container.innerHTML += `
+            <div class="empty-state">
+                <i class="fas fa-star"></i>
+                <p>No preferences saved yet</p>
+                <small>Add your first job preference above</small>
+            </div>
+        `;
+        return;
+    }
+
+    // Create cards for each preference
+    state.currentPreferences.forEach((pref, index) => {
+        const card = document.createElement('div');
+        card.className = 'preference-card';
+        card.dataset.id = pref.PreferredJobID || pref.id;
+
+        // Build card content
+        card.innerHTML = `
+            <div class="preference-content">
+                <div class="preference-number">${index + 1}</div>
+                ${pref.JobField ? `<p><strong>Field:</strong> ${pref.JobField}</p>` : ''}
+                ${pref.JobType ? `<p><strong>Type:</strong> ${pref.JobType}</p>` : ''}
+                ${pref.Location ? `<p><strong>Location:</strong> ${pref.Location}</p>` : ''}
+                ${pref.Salary ? `<p><strong>Salary:</strong> $${pref.Salary.toLocaleString()}</p>` : ''}
+            </div>
+            <button class="delete-pref-btn" data-id="${pref.PreferredJobID || pref.id}">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        container.appendChild(card);
+    });
+
     // Add delete handlers
     document.querySelectorAll('.delete-pref-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deletePreference(btn.dataset.index);
-      });
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePreference(btn.dataset.id);
+        });
     });
 }
 
@@ -263,27 +339,6 @@ function showAlert(type, message) {
   
   setTimeout(() => alert.remove(), 5000);
   alert.querySelector('.close-alert').addEventListener('click', () => alert.remove());
-}
-
-function tryParseAlternativeFormat(prefString) {
-    // Case 1: Simple string without quotes
-    if (typeof prefString === 'string' && !prefString.trim().startsWith('[')) {
-        return [{ jobField: prefString }];
-    }
-    
-    // Case 2: Malformed JSON that might be fixable
-    try {
-        // Try wrapping in brackets if it looks like an object
-        if (prefString.trim().startsWith('{')) {
-            return [JSON.parse(prefString)];
-        }
-        // Try adding quotes around unquoted properties
-        const fixed = prefString.replace(/(\w+):/g, '"$1":');
-        return JSON.parse(fixed);
-    } catch (e) {
-        console.warn('Could not parse preferences:', prefString);
-        return null;
-    }
 }
 
 // setupEventListeners():
@@ -357,55 +412,155 @@ function setupDropdownCloseListener() {
     });
 }
 
+// Save Preferences
 async function savePreferences(e) {
     e.preventDefault();
     
-    if (state.currentPreferences.length >= 3) {
-      showAlert('error', 'Maximum 3 preferences allowed. Delete one to add another.');
+    // Get and validate form values
+    const jobField = document.getElementById('prefJobField').value.trim();
+    if (!jobField) {
+      showAlert('error', 'Job field is required');
       return;
     }
-  
+
     const newPref = {
-      jobField: document.getElementById('prefJobField').value,
-      jobType: document.getElementById('prefJobType').value,
-      location: document.getElementById('prefLocation').value
+      jobField,
+      jobType: document.getElementById('prefJobType').value || null,
+      location: document.getElementById('prefLocation').value.trim() || null,
+      salary: Number(document.getElementById('prefSalary').value) || 0
     };
   
     try {
-      state.currentPreferences.push(newPref);
-      await updatePreferencesOnServer();
+      // Send single preference to server
+      const response = await authenticatedFetch(
+        `/applicants/${state.applicant.ApplicantID}/preferences`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            preference: newPref // Send single preference
+          })
+        }
+      );
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      // Reset form
       document.getElementById('preferencesForm').reset();
+      
+      // Reload preferences from server to stay in sync
+      await loadCurrentPreferences();
+      
+      showAlert('success', 'Preference added successfully');
+      
     } catch (error) {
-      state.currentPreferences.pop(); // Rollback if error
-      console.error('Error saving preferences:', error);
-      showAlert('error', 'Failed to save preferences');
+      console.error('Error saving preference:', error);
+      showAlert('error', error.message || 'Failed to save preference');
     }
 }
 
 // Delete preference
-async function deletePreference(index) {
-    state.currentPreferences.splice(index, 1);
-    await updatePreferencesOnServer();
+async function deletePreference(id) {
+    try {
+        const response = await authenticatedFetch(
+            `/applicants/${state.applicant.ApplicantID}/preferences/${id}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            }
+        );
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete preference');
+        }
+        
+        // Reload preferences from server
+        await loadCurrentPreferences();
+        
+        showAlert('success', 'Preference deleted successfully');
+        
+    } catch (error) {
+        console.error('Error deleting preference:', error);
+        showAlert('error', 'Failed to delete preference');
+    }
 }
 
 // Sync with server
 async function updatePreferencesOnServer() {
     try {
-      const response = await authenticatedFetch(
-        `/applicants/${state.applicant.ApplicantID}/preferences`, 
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            preferences: JSON.stringify(state.currentPreferences)
-          })
-        }
-      );
-      renderPreferenceCards();
+        validateApplicantId();
+        validatePreferenceLimit();
+        const response = await sendPreferencesToServer();
+        return handleServerResponse(response);
     } catch (error) {
-      console.error('Error updating preferences:', error);
-      showAlert('error', 'Failed to update preferences');
-      // Reload from server to sync
-      await loadUserData();
+        handlePreferencesError(error);
+        throw error;
+    }
+}
+
+function validateApplicantId() {
+    if (!state.applicant?.ApplicantID) {
+        throw new Error('No applicant profile found');
+    }
+}
+
+function validatePreferenceLimit() {
+    if (state.currentPreferences.length > 3) {
+        throw new Error('Preference limit reached (max 3)');
+    }
+}
+
+async function sendPreferencesToServer() {
+    return authenticatedFetch(
+        `/applicants/${state.applicant.ApplicantID}/preferences`,
+        {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                preferences: state.currentPreferences
+                    .filter(p => p.jobField) // Filter out invalid prefs
+                    .slice(0, 3) // Enforce server-side limit
+            })
+        }
+    );
+}
+
+function handleServerResponse(response) {
+    if (!response.ok) {
+        return response.json().then(errorData => {
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }).catch(() => {
+            throw new Error(`HTTP ${response.status}`);
+        });
+    }
+    return response.json().then(result => {
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to update preferences');
+        }
+        return result;
+    });
+}
+
+function handlePreferencesError(error) {
+    console.error('Update preferences error:', error);
+    showAlert('error', error.message || 'Failed to update preferences');
+    
+    // Rollback local state if server update failed
+    if (error.message.includes('limit reached')) {
+        state.currentPreferences = state.currentPreferences.slice(0, 3);
+        renderPreferenceCards();
     }
 }
 

@@ -12,7 +12,6 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   const educationLevel = document.getElementById('educationLevel').value;
   const degreeField = document.getElementById('degreeField').value;
   const yearsExperience = document.getElementById('yearsExperience').value;
-  const preferredJobs = document.getElementById('preferredJobs').value;
 
   // Combine education level and field
   const education = degreeField ? `${educationLevel} in ${degreeField}` : educationLevel;
@@ -42,7 +41,6 @@ document.getElementById('signupForm').addEventListener('submit', async function 
   formData.append('dob', dob);
   formData.append('education', education);
   formData.append('workExperience', workExperience);
-  formData.append('preferredJobs', preferredJobs);
 
   // Send the data to the backend
   try {
