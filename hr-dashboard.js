@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Show or hide applications based on search term
             if (title.includes(searchTerm)) {
-                application.style.display = 'flex'; // Adjust to 'block' or 'flex' based on your CSS
+                application.style.display = 'flex';
             } else {
                 application.style.display = 'none';
             }

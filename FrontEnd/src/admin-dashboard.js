@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Function to limit description with ellipsis
     const getBriefDescription = (description) => {
-        const wordLimit = 20; // Set your word limit
+        const wordLimit = 20; // Sets word limit
         const words = description.split(' ');
 
         if (words.length > wordLimit) {
