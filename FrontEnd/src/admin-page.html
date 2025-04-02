@@ -4,19 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="adminstyle.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>TalentSync</title>
 </head>
 
 <!-----Header with title and navigation menu----->
 <body>
     <header>
-        <h1>TalentSync</h1>
-        <h2>Employee Central - Administrator</h2>
-        <div class="icon-wrapper">
-            <a href="#">📧 Mail</a>
-            <a href="#">📄 Reports</a>
-            <a href="#">👤 Account Management</a>
-            <a href="#">🔑 Profile</a>
+        <div class="header-content">
+            <div class="header-titles">
+                <h1>TalentSync</h1>
+                <h2>Employee Central - Administrator</h2>
+            </div>
+            <div class="icon-wrapper">
+                <a href="#"><i class="fas fa-envelope"></i> Mail</a>
+                <a href="#"><i class="fas fa-file-alt"></i> Reports</a>
+                <a href="#"><i class="fas fa-key"></i> Account Management</a>
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+            </div>
         </div>
     </header>
     
@@ -30,19 +35,19 @@
             </div>
             <div class="job-posts-content">
                 <div class="job">
-                    <p>Project Manager</p>
-                    <p>Description</p>
                     <button class="edit-button">Edit</button>
+                    <h3 class="job-title">Project Manager</h3>
+                    <span class="job-description">Description</span>
                 </div>
                 <div class="job">
-                    <p>Machine Operator</p>
-                    <p>Description</p>
                     <button class="edit-button">Edit</button>
+                    <h3 class="job-title">Machine Operator</h3>
+                    <span class="job-description">Description</span>
                 </div>
                 <div class="job">
-                    <p>Network Administrator</p>
-                    <p>Description</p>
                     <button class="edit-button">Edit</button>
+                    <h3 class="job-title">Engineer</h3>
+                    <span class="job-description">Description</span>
                 </div>
             </div>
         </section>
@@ -55,18 +60,18 @@
             </div>
             <div class="categories-content">
                 <div class="category">
-                    <p>Information Technology</p>
-                    <p>Brief Description</p>
+                    <h3 class="category-title">Information Technology</h3>
+                    <p class="category-description">Brief Description</p>
                     <button class="edit-button">Edit</button>
                 </div>
                 <div class="category">
-                    <p>Engineering</p>
-                    <p>Brief Description</p>
+                    <h3 class="category-title">Engineering</h3>
+                    <p class="category-description">Brief Description</p>
                     <button class="edit-button">Edit</button>
                 </div>
                 <div class="category">
-                    <p>Management</p>
-                    <p>Brief Description</p>
+                    <h3 class="category-title">Management</h3>
+                    <p class="category-description">Brief Description</p>
                     <button class="edit-button">Edit</button>
                 </div>
             </div>
@@ -77,29 +82,34 @@
             <h2>HR Staff</h2>
             <div class="search-bar">
                 <input type="text" placeholder="Search: ID, Name">
+                <button class="create-button">+</button>
             </div>
             <div class="hr-staff-content">
                 <div class="staff-member">
-                    <div class="avatar">👤</div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
                     <p># 001</p>
-                    <p>John Doe</p>
+                    <p class="name">James</p>
+                    <p class="name">McVoy</p> 
                 </div>
                 <div class="staff-member">
-                    <div class="avatar">👤</div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
                     <p># 002</p>
-                    <p>Jane Smith</p>
+                    <p class="name">Sara</p>
+                    <p class="name">James</p> 
                 </div>
                 <div class="staff-member">
-                    <div class="avatar">👤</div>
-                        <p># 003</p>
-                        <p>Michael Brown</p>
-                    </div>
-                <div class="staff-member">
-                    <div class="avatar">👤</div>
-                        <p># 004</p>
-                        <p>Emily White</p>
-                    </div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p># 003</p>
+                    <p class="name">Nicole</p>
+                    <p class="name">Torey</p> 
                 </div>
+                <div class="staff-member">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <p># 004</p>
+                    <p class="name">John</p>
+                    <p class="name">Davidson</p> 
+                </div>
+            </div>
         </section>
 
         <!-----Notifications quadrant----->
@@ -110,14 +120,14 @@
             </div>
             <div class="notifications-content">
                 <div class="notification">
-                    <p>Request For Removal - HR</p>
-                    <p>Brief Description</p>
                     <button class="remove-button">X</button>
+                    <h3 class="notification-title">Request For Removal - HR</h3>
+                    <p class="notification-description">There’s a job post...</p>
                 </div>
                 <div class="notification">
-                    <p>Notice</p>
-                    <p>Brief Description</p>
                     <button class="remove-button">X</button>
+                    <h3 class="notification-title">Notice</h3>
+                    <p class="notification-description">Everyone in room...</p>
                 </div>
             </div>
         </section>
