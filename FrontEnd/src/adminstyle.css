@@ -49,6 +49,7 @@ main {
 
 /* Section style (represents each quadrants) */
 section {
+    position: relative;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -118,15 +119,15 @@ section {
     height: 200px;
 }
 
-/* Content styles for HR Staff */
+/* HR Staff content styles*/
 .hr-staff-content {
     background-color: #ffffff;
     border-radius: 5px; 
-    height: 200px;
-    overflow: auto; /* Scroll if content exceeds height */
+    height: 200px; /* Allow it to grow as needed */
+    overflow-y: auto; /* Enable vertical scrolling if needed */
     padding: 10px; 
     display: grid; /* Use grid for layout for HR*/
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsive grid */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjusted min width for responsiveness */
     gap: 10px; /* Gap between Staff */
 }
 
@@ -134,16 +135,25 @@ section {
 .staff-member {
     background-color: #e0e0e0;
     border-radius: 15px; 
-    padding: 5px; 
-    text-align: center; 
-    height: 100px; 
+    padding: 15px; /* Increased padding for better spacing */
+    text-align: left; /* Align text to the left */
+    position: relative;
+    height: auto; /* Adjust height to auto for flexibility */
     border: 1px solid #b0b0b0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
 }
 
 .staff-member .avatar i {
     font-size: 40px; 
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.staff-member p.staff-id, .staff-member p.name {
+    margin-bottom: 10px; /* Extra spacing below ID and Name */
+}
+
+.staff-member p.email, .staff-member p.phone {
+    margin: 4px 0; /* Adjusted margin for email and phone */
 }
 
 .staff-member p:first-of-type {
@@ -152,14 +162,8 @@ section {
     margin: 0; 
 }
 
-.staff-member p.name {
-    font-size: 15px; /* Same size for both name components */
-    font-weight: normal; /* Normal font weight */
-    margin: 0; 
-}
-
 .staff-member p {
-    margin: 2px 0; /* Reduced margin for all paragraphs */
+    margin: 5px 0; /* Reduced margin for all paragraphs */
 }
 
 /*Item Styles */
@@ -168,17 +172,13 @@ section {
     border: 1px solid #b0b0b0;
     border-radius: 4px;
     padding: 10px;
-    margin-bottom: 20px; /* Spacing between items */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional shadow */
-    height: 80px; /* Fixed height for uniformity */
-    display: flex; /* Use flex to align contents */
+    margin-bottom: 20px; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+    height: 80px; 
+    display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
-    position: relative; /* Enable absolute positioning inside */
-}
-
-.category p {
-    margin: 0; /* Removes default margin */
+    position: relative;
 }
 
 /* Search Bar Styles */
@@ -202,9 +202,6 @@ section {
 
 /* Button Styles */
 .edit-button, .remove-button {
-    position: absolute; 
-    top: 10px; 
-    right: 10px; 
     background-color: #2c3e50; /* Subtle color change */
     color: white;
     border: none;
@@ -261,4 +258,38 @@ section {
 .icon-wrapper a:hover {
     text-decoration: underline;
     color: lightgray;
+}
+
+.job-posts-container .button-wrapper,
+.categories-container .button-wrapper,
+.notifications-container .button-wrapper {
+    display: flex;
+    justify-content: flex-end; 
+    font-size: 20px;
+    gap: 5px; 
+    margin-bottom: 5px; /* Adjust for spacing above buttons */
+    position: absolute; /* Allow positioning */
+    top: 10px; /* Adjust as necessary */
+    right: 10px; /* Adjust as necessary */
+}
+
+.hr-staff-container .button-wrapper {
+    display: flex; 
+    justify-content: center; 
+    gap: 10px; /* Space between buttons */
+    margin-top: 5px; /* Space above buttons */
+}
+
+.staff-member .button-wrapper {
+    margin-top: 10px; /* Added space above buttons */
+    display: flex; 
+    gap: 10px; /* Increased space between buttons */
+}
+
+.staff-member .icon-wrapper {
+    display: flex;
+    justify-content: flex-end; 
+    margin-left: auto; 
+    font-size: 20px;
+    gap: 30px; /* Increased gap between icons */
 }

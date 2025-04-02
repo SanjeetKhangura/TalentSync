@@ -1,101 +1,256 @@
+// JOB POSTS QUADRANT FUNCTIONS
 document.addEventListener("DOMContentLoaded", () => {
-    // Edit functionality for job posts and categories
-    document.querySelectorAll('.edit-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const item = button.parentElement;
-            const title = item.children[0].innerText;
-            const newTitle = prompt("Edit title:", title);
-            if (newTitle) {
-                item.children[0].innerText = newTitle;
+    // Functionality to remove job posts
+    const attachRemoveFunctionality = (job) => {
+        const removeButton = job.querySelector('.remove-button');
+        
+        removeButton.addEventListener('click', () => {
+            const title = job.querySelector('.job-title').innerText;
+            if (confirm(`Deleting ${title}; Are you sure?`)) {
+                job.remove();
+            }
+        });
+    };
+
+    // Functionality for search bar
+    const searchInput = document.querySelector('.job-posts-container .search-bar input');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.job').forEach(job => {
+            const title = job.querySelector('.job-title').innerText.toLowerCase();
+
+            // Show or hide job based on search term
+            if (title.includes(searchTerm)) {
+                job.style.display = 'flex'; // Change 'block' to 'flex' for better layout
+            } else {
+                job.style.display = 'none';
             }
         });
     });
 
-    // Remove functionality for notifications
-    document.querySelectorAll('.remove-button').forEach(button => {
-        button.addEventListener('click', () => {
-            const notification = button.parentElement;
-            notification.remove();
+    // Attach functionality to existing job posts
+    document.querySelectorAll('.job').forEach(job => {
+        attachRemoveFunctionality(job);
+    });
+});
+
+// CATEGORIES QUADRANT FUNCTIONS
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // Functionality to edit categories
+    const attachEditFunctionality = (category) => {
+        const editButton = category.querySelector('.edit-button');
+        
+        editButton.addEventListener('click', () => {
+            const title = category.querySelector('.category-title').innerText;
+            const description = category.querySelector('.category-description').innerText;
+            const newTitle = prompt("Edit Category Title:", title);
+            const newDescription = prompt("Edit Category Description", description);
+
+            if (newTitle) {
+                category.querySelector('.category-title').innerText = newTitle;
+            }
+            if (newDescription) {
+                category.querySelector('.category-description').innerText = getBriefDescription(newDescription);
+            }
         });
+    };
+
+    // Function to limit description with ellipsis
+    const getBriefDescription = (description) => {
+        const wordLimit = 20; // Set your word limit
+        const words = description.split(' ');
+
+        if (words.length > wordLimit) {
+            return words.slice(0, wordLimit).join(' ') + ' ...';
+        }
+        return description;
+    };
+
+    // Functionality to remove categories
+    const attachRemoveFunctionality = (category) => {
+        const removeButton = category.querySelector('.remove-button');
+        
+        removeButton.addEventListener('click', () => {
+            const title = category.querySelector('.category-title').innerText;
+            if (confirm(`Deleting ${title}; Are you sure?`)) {
+                category.remove();
+            }
+        });
+    };
+
+    // Attach functionality to existing categories
+    document.querySelectorAll('.category').forEach(category => {
+        attachEditFunctionality(category);
+        attachRemoveFunctionality(category);
     });
 
-    // Search functionality for Job Posts
-    const jobSearchInput = document.querySelector('.job-posts .search-bar input');
-    jobSearchInput.addEventListener('keyup', () => {
-        const filter = jobSearchInput.value.toLowerCase();
-        const jobs = document.querySelectorAll('.job');
-        jobs.forEach(job => {
-            const title = job.children[0].innerText.toLowerCase();
-            job.style.display = title.includes(filter) ? "" : "none";
-        });
+    // Functionality to add new categories
+    const createCategoryButton = document.querySelector('.categories-container .create-button');
+    const categoriesContent = document.querySelector('.categories-content');
+
+    createCategoryButton.addEventListener('click', () => {
+        const categoryTitle = prompt("Enter Category Title:");
+        const categoryDescription = prompt("Enter Category Description:");
+
+        if (categoryTitle && categoryDescription) {
+            const newCategoryDiv = document.createElement('div');
+            newCategoryDiv.className = 'category';
+            newCategoryDiv.innerHTML = `
+                <h3 class="category-title">${categoryTitle}</h3>
+                <p class="category-description">${getBriefDescription(categoryDescription)}</p>
+                <div class="button-wrapper">
+                    <button class="edit-button">Edit</button>
+                    <button class="remove-button">X</button>
+                </div>
+            `;
+            categoriesContent.appendChild(newCategoryDiv);
+            attachEditFunctionality(newCategoryDiv);
+            attachRemoveFunctionality(newCategoryDiv);
+        }
     });
 
-    // Search functionality for Categories
-    const categorySearchInput = document.querySelector('.categories-container .search-bar input');
-    categorySearchInput.addEventListener('keyup', () => {
-        const filter = categorySearchInput.value.toLowerCase();
-        const categories = document.querySelectorAll('.category');
-        categories.forEach(category => {
-            const title = category.children[0].innerText.toLowerCase();
-            category.style.display = title.includes(filter) ? "" : "none";
-        });
-    });
+    // Functionality for search bar
+    const searchInput = document.querySelector('.categories-container .search-bar input');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.category').forEach(category => {
+            const title = category.querySelector('.category-title').innerText.toLowerCase();
 
-    // Search functionality for HR Staff
-    const hrSearchInput = document.querySelector('.hr-staff .search-bar input');
-    hrSearchInput.addEventListener('keyup', () => {
-        const filter = hrSearchInput.value.toLowerCase();
-        const staffMembers = document.querySelectorAll('.staff-member');
-        staffMembers.forEach(member => {
-            const name = member.innerText.toLowerCase();
-            member.style.display = name.includes(filter) ? "" : "none";
-        });
-    });
-
-    // Search functionality for Notifications
-    const notificationSearchInput = document.querySelector('.notifications .search-bar input');
-    notificationSearchInput.addEventListener('keyup', () => {
-        const filter = notificationSearchInput.value.toLowerCase();
-        const notifications = document.querySelectorAll('.notification');
-        notifications.forEach(notification => {
-            const description = notification.innerText.toLowerCase();
-            notification.style.display = description.includes(filter) ? "" : "none";
+            // Show or hide categories based on search term
+            if (title.includes(searchTerm)) {
+                category.style.display = 'block';
+            } else {
+                category.style.display = 'none';
+            }
         });
     });
 });
 
+// NOTIFICATIONS QUADRANT FUNCTIONS
 document.addEventListener("DOMContentLoaded", () => {
-    // Existing event listeners...
+    
+    // Functionality to remove notifications
+    const attachRemoveFunctionality = (notification) => {
+        const removeButton = notification.querySelector('.remove-button');
+        
+        removeButton.addEventListener('click', () => {
+                notification.remove();
+        });
+    };
 
-    // Create new staff member functionality
-    const createButton = document.querySelector('.create-button');
+    // Attach functionality to existing notifications
+    document.querySelectorAll('.notification').forEach(notification => {
+        attachRemoveFunctionality(notification);
+    });
+
+    // Functionality for search bar
+    const searchInput = document.querySelector('.notifications-container .search-bar input');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.notification').forEach(notification => {
+            const title = notification.querySelector('.notification-title').innerText.toLowerCase();
+
+            // Show or hide notifications based on search term
+            if (title.includes(searchTerm)) {
+                notification.style.display = 'block';
+            } else {
+                notification.style.display = 'none';
+            }
+        });
+    });
+});
+
+// HR STAFF QUADRANT FUNCTIONS
+document.addEventListener("DOMContentLoaded", () => {
+    // Functionality to edit staff members
+    const attachEditFunctionality = (staffMember) => {
+        const editButton = staffMember.querySelector('.edit-button');
+        
+        editButton.addEventListener('click', () => {
+            const firstName = staffMember.querySelector('.name.first-name').innerText;
+            const lastName = staffMember.querySelector('.name.last-name').innerText;
+            const id = staffMember.querySelector('.staff-id').innerText;
+
+            const newFirstName = prompt("Edit First Name:", firstName);
+            const newLastName = prompt("Edit Last Name:", lastName);
+            const newId = prompt("Edit ID:", id);
+
+            if (newFirstName) {
+                staffMember.querySelector('.name.first-name').innerText = newFirstName;
+            }
+            if (newLastName) {
+                staffMember.querySelector('.name.last-name').innerText = newLastName;
+            }
+            if (newId) {
+                staffMember.querySelector('.staff-id').innerText = newId;
+            }
+        });
+    };
+
+    // Functionality to remove staff members
+    const attachRemoveFunctionality = (staffMember) => {
+        const removeButton = staffMember.querySelector('.remove-button');
+        
+        removeButton.addEventListener('click', () => {
+            const firstName = staffMember.querySelector('.name.first-name').innerText;
+            const lastName = staffMember.querySelector('.name.last-name').innerText;
+            const id = staffMember.querySelector('.staff-id').innerText;
+            if (confirm(`Deleting ${id} - ${firstName} ${lastName}; Are you sure?`)) {
+                staffMember.remove();
+            }
+        });
+    };
+
+    // Attach functionality to existing staff members
+    document.querySelectorAll('.staff-member').forEach(staffMember => {
+        attachEditFunctionality(staffMember);
+        attachRemoveFunctionality(staffMember);
+    });
+
+    // Functionality to add new staff members
+    const createStaffButton = document.querySelector('.hr-staff-container .create-button');
     const hrStaffContent = document.querySelector('.hr-staff-content');
 
-    createButton.addEventListener('click', () => {
-        const staffID = prompt("Enter Staff Member ID:");
-        const staffName = prompt("Enter Staff Member Name:");
+    createStaffButton.addEventListener('click', () => {
+        const id = prompt("Enter Staff ID:");
+        const firstName = prompt("Enter First Name:");
+        const lastName = prompt("Enter Last Name:");
 
-        if (staffID && staffName) {
-            const staffMemberDiv = document.createElement('div');
-            staffMemberDiv.className = 'staff-member';
-            staffMemberDiv.innerHTML = `
+        if (id && firstName && lastName) {
+            const newStaffDiv = document.createElement('div');
+            newStaffDiv.className = 'staff-member';
+            newStaffDiv.innerHTML = `
                 <div class="avatar"><i class="fas fa-user"></i></div>
-                <p># ${staffID}</p>
-                <p>${staffName}</p>
+                <p class="staff-id">${id}</p>
+                <p class="name first-name">${firstName}</p>
+                <p class="name last-name">${lastName}</p>
+                <div class="button-wrapper">
+                    <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="remove-button">X</button>
+                </div>
             `;
-
-            hrStaffContent.appendChild(staffMemberDiv);
+            hrStaffContent.appendChild(newStaffDiv);
+            attachEditFunctionality(newStaffDiv);
+            attachRemoveFunctionality(newStaffDiv);
         }
     });
 
-    // Add search functionality for HR Staff -- unchanged
-    const hrSearchInput = document.querySelector('.hr-staff-container .search-bar input');
-    hrSearchInput.addEventListener('keyup', () => {
-        const filter = hrSearchInput.value.toLowerCase();
-        const staffMembers = hrStaffContent.querySelectorAll('.staff-member');
-        staffMembers.forEach(member => {
-            const name = member.innerText.toLowerCase();
-            member.style.display = name.includes(filter) ? "" : "none";
+    // Functionality for search bar
+    const searchInput = document.querySelector('.hr-staff-container .search-bar input');
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.staff-member').forEach(staffMember => {
+            const firstName = staffMember.querySelector('.name.first-name').innerText.toLowerCase();
+            const lastName = staffMember.querySelector('.name.last-name').innerText.toLowerCase();
+            const id = staffMember.querySelector('.staff-id').innerText.toLowerCase();
+
+            // Show or hide staff members based on search term
+            if (firstName.includes(searchTerm) || lastName.includes(searchTerm) || id.includes(searchTerm)) {
+                staffMember.style.display = 'block';
+            } else {
+                staffMember.style.display = 'none';
+            }
         });
     });
 });

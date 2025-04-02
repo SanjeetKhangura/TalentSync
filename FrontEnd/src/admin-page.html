@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="adminstyle.css">
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>TalentSync</title>
 </head>
 
-<!-----Header with title and navigation menu----->
+<!-- Header with title and navigation menu -->
 <body>
     <header>
         <div class="header-content">
@@ -26,7 +26,7 @@
     </header>
     
     <main>
-        <!-----Job posts quadrant----->
+        <!-- Job posts quadrant -->
         <section class="job-posts-container">
             <h2>Job Posts</h2>
             <div class="search-bar">
@@ -35,51 +35,123 @@
             </div>
             <div class="job-posts-content">
                 <div class="job">
-                    <button class="edit-button">Edit</button>
                     <h3 class="job-title">Project Manager</h3>
-                    <span class="job-description">Description</span>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="job">
-                    <button class="edit-button">Edit</button>
                     <h3 class="job-title">Machine Operator</h3>
-                    <span class="job-description">Description</span>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="job">
-                    <button class="edit-button">Edit</button>
                     <h3 class="job-title">Engineer</h3>
-                    <span class="job-description">Description</span>
+                    <p class="job-description">Description</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
             </div>
         </section>
         
-        <!-----Categories quadrant----->
+        <!-- Categories quadrant -->
         <section class="categories-container">
             <h2>Categories</h2>
             <div class="search-bar">
                 <input type="text" placeholder="Search: Business, Engineering, ...">
+                <button class="create-button">+</button>
             </div>
             <div class="categories-content">
                 <div class="category">
                     <h3 class="category-title">Information Technology</h3>
                     <p class="category-description">Brief Description</p>
-                    <button class="edit-button">Edit</button>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="category">
                     <h3 class="category-title">Engineering</h3>
                     <p class="category-description">Brief Description</p>
-                    <button class="edit-button">Edit</button>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Education</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Agriculture</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Healthcare</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="category">
                     <h3 class="category-title">Management</h3>
                     <p class="category-description">Brief Description</p>
-                    <button class="edit-button">Edit</button>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Law</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Entertainment</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Government</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
+                </div>
+                <div class="category">
+                    <h3 class="category-title">Finance</h3>
+                    <p class="category-description">Brief Description</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
             </div>
         </section>
         
-        <!-----HR staff quadrant----->
+        <!-- HR staff quadrant -->
         <section class="hr-staff-container">
-            <h2>HR Staff</h2>
+            <h2>Human Resources Staff</h2>
             <div class="search-bar">
                 <input type="text" placeholder="Search: ID, Name">
                 <button class="create-button">+</button>
@@ -87,32 +159,52 @@
             <div class="hr-staff-content">
                 <div class="staff-member">
                     <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p># 001</p>
-                    <p class="name">James</p>
-                    <p class="name">McVoy</p> 
+                    <p class="staff-id"><i class="fas fa-hashtag"></i></i>001</p>
+                    <p class="name"><i class="fas fa-user-circle"></i></i>James McVoy</p>
+                    <p class="email"><i class="fas fa-envelope"></i>james@example.com</p>
+                    <p class="phone"><i class="fas fa-phone"></i>123-456-7890</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="staff-member">
                     <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p># 002</p>
-                    <p class="name">Sara</p>
-                    <p class="name">James</p> 
+                    <p class="staff-id">002</p>
+                    <p class="name">Sara James</p>
+                    <p class="email">Sara@gmail.com</p>
+                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="staff-member">
                     <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p># 003</p>
-                    <p class="name">Nicole</p>
-                    <p class="name">Torey</p> 
+                    <p class="staff-id">003</p>
+                    <p class="name">Nicole Torey</p>
+                    <p class="email">nicole@gmail.com</p>
+                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="staff-member">
                     <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p># 004</p>
-                    <p class="name">John</p>
-                    <p class="name">Davidson</p> 
+                    <p class="staff-id">004</p>
+                    <p class="name">John Davidson</p>
+                    <p class="email">john@gmail.com</p>
+                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="button-wrapper">
+                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-----Notifications quadrant----->
+        <!-- Notifications quadrant -->
         <section class="notifications-container">
             <h2>Notifications</h2>
             <div class="search-bar">
@@ -120,14 +212,18 @@
             </div>
             <div class="notifications-content">
                 <div class="notification">
-                    <button class="remove-button">X</button>
                     <h3 class="notification-title">Request For Removal - HR</h3>
                     <p class="notification-description">There’s a job post...</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
                 <div class="notification">
-                    <button class="remove-button">X</button>
                     <h3 class="notification-title">Notice</h3>
                     <p class="notification-description">Everyone in room...</p>
+                    <div class="button-wrapper">
+                        <button class="remove-button">X</button>
+                    </div>
                 </div>
             </div>
         </section>
