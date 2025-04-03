@@ -10,29 +10,39 @@
 </head>
 
 <!-- Header with title and navigation menu -->
+
 <body>
     <header>
         <div class="header-content">
+            <!-- Titles on the left -->
             <div class="header-titles">
                 <h1>TalentSync</h1>
                 <h2>Employee Central - Administrator</h2>
             </div>
+            <!-- Navigation on the right -->
             <div class="icon-wrapper">
+                <a href="#"><i class="fas fa-home"></i> Home</a>
                 <a href="#"><i class="fas fa-envelope"></i> Mail</a>
                 <a href="#"><i class="fas fa-file-alt"></i> Reports</a>
                 <a href="#"><i class="fas fa-key"></i> Account Management</a>
-                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <div class="profile-dropdown">
+                    <a href="#" class="profile-link"><img src="path/to/placeholder-image.png"
+                            class="profile-placeholder">My Profile</a>
+                    <div class="dropdown-content">
+                        <a href="#"><i class="fas fa-user"></i> Profile Settings</a>
+                        <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
-    
+
     <main>
         <!-- Job posts quadrant -->
         <section class="job-posts-container">
             <h2>Job Posts</h2>
             <div class="search-bar">
                 <input type="text" placeholder="Search...">
-                <button class="filter-button">Filters / Sort +</button>
             </div>
             <div class="job-posts-content">
                 <div class="job">
@@ -58,7 +68,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- Categories quadrant -->
         <section class="categories-container">
             <h2>Categories</h2>
@@ -149,7 +159,7 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- HR staff quadrant -->
         <section class="hr-staff-container">
             <h2>Human Resources Staff</h2>
@@ -159,44 +169,52 @@
             </div>
             <div class="hr-staff-content">
                 <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="staff-id"><i class="fas fa-hashtag"></i></i>001</p>
-                    <p class="name"><i class="fas fa-user-circle"></i></i>James McVoy</p>
-                    <p class="email"><i class="fas fa-envelope"></i>james@example.com</p>
-                    <p class="phone"><i class="fas fa-phone"></i>123-456-7890</p>
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <p class="staff-id">001</p>
+                    <div class="staff-details">
+                        <p class="name first-name">James McVoy</p>
+                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
+                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
+                    </div>
                     <div class="button-wrapper">
                         <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
                         <button class="remove-button">X</button>
                     </div>
                 </div>
                 <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
                     <p class="staff-id">002</p>
-                    <p class="name">Sara James</p>
-                    <p class="email">Sara@gmail.com</p>
-                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="staff-details">
+                        <p class="name first-name">Sarah Taylor</p>
+                        <p class="email"><i class="fas fa-envelope"></i><span>sarah@example.com</span></p>
+                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
+                    </div>
                     <div class="button-wrapper">
                         <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
                         <button class="remove-button">X</button>
                     </div>
                 </div>
                 <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="staff-id">003</p>
-                    <p class="name">Nicole Torey</p>
-                    <p class="email">nicole@gmail.com</p>
-                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <p class="staff-id">001</p>
+                    <div class="staff-details">
+                        <p class="name first-name">James McVoy</p>
+                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
+                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
+                    </div>
                     <div class="button-wrapper">
                         <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
                         <button class="remove-button">X</button>
                     </div>
                 </div>
                 <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="staff-id">004</p>
-                    <p class="name">John Davidson</p>
-                    <p class="email">john@gmail.com</p>
-                    <p class="phone">Phone: 123-456-7890</p>
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <p class="staff-id">001</p>
+                    <div class="staff-details">
+                        <p class="name first-name">James McVoy</p>
+                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
+                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
+                    </div>
                     <div class="button-wrapper">
                         <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
                         <button class="remove-button">X</button>
