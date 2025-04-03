@@ -18,9 +18,9 @@
       </div>
       <div class="nav-right">
         <ul class="top-nav-menu">
-          <li class="nav-item active" data-section="dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li>
-          <li class="nav-item" data-section="applications"><i class="fas fa-file-alt"></i> <span>My Applications</span></li>
-          <li class="nav-item" data-section="preferences"><i class="fas fa-star"></i> <span>Job Preferences</span></li>
+            <li class="nav-item active" data-section="dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li>
+            <li class="nav-item" data-section="applications"><i class="fas fa-file-alt"></i> <span>My Applications</span></li>
+            <li class="nav-item" data-section="preferences"><i class="fas fa-star"></i> <span>Job Preferences</span></li>
         </ul>
         <div class="profile-dropdown">
           <div class="profile-tab">
@@ -39,7 +39,7 @@
     <!-- Main Content Area -->
     <main class="applicant-main-content">
       <!-- Dashboard Overview Section -->
-      <section id="dashboardSection" class="applicant-content-section active">
+      <section id="dashboardSection" class="content-section active">
         <!-- Job Search Section -->
         <div class="applicant-search-filters">
           <input type="text" id="jobSearchInput" class="form-input" placeholder="Search by job title, keywords...">
@@ -71,122 +71,126 @@
           </div>
         </div>
 
-        <!-- Current Job Preferences-->
-        <div class="applicant-preferences-container">
-          <h3>Current Job Preferences</h3>
-          <div id="preferencesCards" class="applicant-preference-cards">
-            <!-- Preference cards will be inserted here dynamically -->
-          </div>
+        <div class="preferences-section">            
+            <div id="dashboardPreferencesCards" class="preferences-cards-container">
+                <!-- Dashboard preference cards will be inserted here -->
+            </div>
         </div>
         
         <!-- Recommended Jobs Section -->
         <div class="applicant-recommended-jobs">
-          <h3>Recommended Jobs</h3>
+          <h3>Jobs</h3>
           <div class="applicant-job-listings" id="jobListingsContainer">
             <!-- Job cards will be inserted here dynamically -->
           </div>
         </div>
       </section>
 
-      <!-- Applications Section -->
-      <section id="applicationsSection" class="applicant-content-section">
-        <div class="applicant-application-filters">
-          <select id="applicationStatusFilter" class="form-select">
-            <option value="All">All Applications</option>
-            <option value="Pending">Pending</option>
-            <option value="Next Step">Next Step</option>
-            <option value="Screened Out">Screened Out</option>
-            <option value="Hired">Hired</option>
-          </select>
-        </div>
-        <div class="applicant-applications-list" id="applicationsList">
-          <!-- Applications will be inserted here dynamically -->
-        </div>
+      <section id="applicationsSection" class="content-section hidden">
+        <!-- Applications Section -->
+        <section id="applicationsSection" class="applicant-content-section">
+            <div class="applicant-application-filters">
+            <select id="applicationStatusFilter" class="form-select">
+                <option value="All">All Applications</option>
+                <option value="Pending">Pending</option>
+                <option value="Next Step">Next Step</option>
+                <option value="Screened Out">Screened Out</option>
+                <option value="Hired">Hired</option>
+            </select>
+            </div>
+            <div class="applicant-applications-list" id="applicationsList">
+            <!-- Applications will be inserted here dynamically -->
+            </div>
+        </section>
       </section>
 
-      <!-- Profile Settings Section -->
-      <section id="profileSection" class="applicant-content-section">
-        <div class="profile-settings-container">
-          <h2>Profile Settings</h2>
-          <form id="profileForm">
-            <div class="form-group">
-              <label>Profile Picture</label>
-              <div class="profile-pic-upload">
-                <img id="profilePreview" src="" alt="Profile Preview">
-                <input type="file" id="profileUpload" accept="image/*">
-              </div>
+      <section id="profileSection" class="content-section hidden">
+         <!-- Profile Settings Section -->
+        <section id="profileSection" class="applicant-content-section">
+            <div class="profile-settings-container">
+                <h2>Profile Settings</h2>
+                <form id="profileForm">
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <div class="profile-pic-upload">
+                    <img id="profilePreview" src="/Assets/default-avatar.png" alt="Profile Preview">
+                    <input type="file" id="profileUpload" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="profileName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="profileEmail" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="profilePhone" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+                
+                <div class="password-change-section">
+                <h3>Change Password</h3>
+                <form id="passwordForm">
+                    <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required minlength="8">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+                </div>
             </div>
-            
-            <div class="form-group">
-              <label>Full Name</label>
-              <input type="text" id="profileName">
-            </div>
-            
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" id="profileEmail" disabled>
-            </div>
-            
-            <div class="form-group">
-              <label>Phone</label>
-              <input type="tel" id="profilePhone">
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-          </form>
-          
-          <div class="password-change-section">
-            <h3>Change Password</h3>
-            <form id="passwordForm">
-              <div class="form-group">
-                <label>Current Password</label>
-                <input type="password" id="currentPassword">
-              </div>
-              <div class="form-group">
-                <label>New Password</label>
-                <input type="password" id="newPassword">
-              </div>
-              <div class="form-group">
-                <label>Confirm New Password</label>
-                <input type="password" id="confirmPassword">
-              </div>
-              <button type="submit" class="btn btn-primary">Update Password</button>
-            </form>
-          </div>
-        </div>
+        </section>
       </section>
 
-      <!-- Job Preferences Section -->
-      <section id="preferencesSection" class="applicant-content-section">
+      <section id="preferencesSection" class="content-section hidden">
+        <!-- Job preferences -->
+
         <div class="job-preferences-container">
             <h2>Job Preferences</h2>
             <div id="preferencesCards" class="preferences-cards-container">
-              <!-- Preferences cards will appear here -->
+              <!-- Main preference cards will appear here -->
             </div>
             <form id="preferencesForm" class="preferences-form">
               <div class="form-group">
-                <label>Desired Job Field</label>
-                <input type="text" id="prefJobField" placeholder="e.g. Software Development" required>
+                  <label>Desired Job Field</label>
+                  <input type="text" id="prefJobField" placeholder="e.g. Software Development" required>
               </div>
               <div class="form-group">
-                <label>Job Type</label>
-                <select id="prefJobType" class="form-select" required>
+                  <label>Job Type</label>
+                  <select id="prefJobType" class="form-select" required>
                   <option value="">Any Type</option>
                   <option value="Full Time">Full Time</option>
                   <option value="Part Time">Part Time</option>
-                </select>
+                  </select>
               </div>
               <div class="form-group">
-                <label>Preferred Location</label>
-                <input type="text" id="prefLocation" placeholder="e.g. New York, Remote" required>
+                  <label>Preferred Location</label>
+                  <input type="text" id="prefLocation" placeholder="e.g. New York, Remote" required>
               </div>
               <div class="form-group">
-                <label>Salary Expectation</label>
-                <input type="number" id="prefSalary" placeholder="e.g. 60000" required>
+                  <label>Salary Expectation</label>
+                  <input type="number" id="prefSalary" placeholder="e.g. 60000" required>
               </div>
               <button type="submit" class="btn btn-primary">Add Preference</button>
             </form>
         </div>
+        
       </section>
     </main>
   </div>
@@ -217,6 +221,26 @@
           </div>
           <button type="submit" class="btn btn-primary">Submit Application</button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Details Modal -->
+  <div id="applicationDetailsModal" class="applicant-modal" style="display:none;">
+    <div class="applicant-modal-content">
+      <span class="close-modal">&times;</span>
+      <h2 id="modalAppTitle">Application Details</h2>
+      <div class="applicant-application-details">
+        <p><strong>Status:</strong> <span id="modalAppStatus" class="status-badge"></span></p>
+        <p><strong>Position:</strong> <span id="modalAppPosition"></span></p>
+        <p><strong>Location:</strong> <span id="modalAppLocation"></span></p>
+        <p><strong>Salary Range:</strong> $<span id="modalAppSalary"></span></p>
+        <p><strong>Applied On:</strong> <span id="modalAppDate"></span></p>
+        <p><strong>Notes:</strong> <span id="modalAppNotes"></span></p>
+      </div>
+      <div class="applicant-job-description">
+        <h3>Job Description</h3>
+        <div id="modalAppDescription"></div>
       </div>
     </div>
   </div>

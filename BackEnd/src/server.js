@@ -1,26 +1,21 @@
-// Load environment variables
+// =============================================
+// CONFIGURATION & INITIALIZATION
+// =============================================
+
 require('dotenv').config();
-// Import Express module
 const express = require('express');
-// For parsing request body
 const bodyParser = require('body-parser');
-// For handling CORS
 const cors = require('cors');
-// For handling file uploads
 const multer = require('multer');
-// For password hashing
 const bcrypt = require('bcrypt');
-// For session management
 const jwt = require('jsonwebtoken');
-// For logging
 const winston = require('winston');
-// Use Promise version of MySQL
 const mysql = require('mysql2/promise');
 
 const app = express();
 const port = 3000;
 
-// Set up logging
+// Logger Configuration
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
@@ -31,7 +26,7 @@ const logger = winston.createLogger({
   ],
 });
 
-// Enable CORS with proper configuration
+// Middleware Setup
 app.use(cors({
   origin: 'http://localhost:52330',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -40,11 +35,10 @@ app.use(cors({
   credentials: true
 }));
 
-// Middleware to parse JSON and form data
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Set up multer for file uploads
+// File Upload Configuration
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -58,7 +52,19 @@ const upload = multer({
   },
 });
 
-// Create a MySQL connection pool
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
+
+// Database Configuration
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -69,7 +75,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Test the database connection
+// Test Database Connection
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
@@ -78,55 +84,15 @@ async function testConnection() {
     logger.info('Successfully connected to MySQL database!');
   } catch (err) {
     logger.error('Error connecting to MySQL:', err);
-    process.exit(1); // Exit if no DB connection
+    process.exit(1);
   }
 }
 testConnection();
 
-// Login endpoint
-app.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// =============================================
+// UTILITY FUNCTIONS
+// =============================================
 
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ message: 'Invalid email format.' });
-    }
-
-    const user = await getUserByEmail(email).catch(err => {
-      logger.error('Login database error:', err);
-      throw new Error('Database error during login');
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.Password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
-    }
-
-    const roleData = await getRoleData(user);
-    const token = generateToken(user, roleData);
-
-    setAuthHeaders(res, token);
-    res.json({
-      message: 'Login successful!',
-      token,
-      role: user.Role,
-      redirect: `${user.Role.toLowerCase()}-dashboard.html`
-    });
-
-  } catch (error) {
-    logger.error('Login process error:', error);
-    res.status(500).json({ 
-      message: 'An error occurred during login',
-      error: error.message 
-    });
-  }
-});
-
-// Helper Functions
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -138,10 +104,10 @@ async function getUserByEmail(email) {
       'SELECT * FROM users WHERE Email = ?', 
       [email]
     );
-    return results[0]; // Return first match or undefined
+    return results[0];
   } catch (err) {
     logger.error('Database error in getUserByEmail:', err);
-    throw err; // Re-throw for the login endpoint to handle
+    throw err;
   }
 }
 
@@ -184,7 +150,73 @@ function setAuthHeaders(res, token) {
   res.header('Authorization', `Bearer ${token}`);
 }
 
-// Signup endpoint
+// =============================================
+// AUTHENTICATION MIDDLEWARE
+// =============================================
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication token missing' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
+// =============================================
+// AUTHENTICATION ROUTES
+// =============================================
+
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Invalid email format.' });
+    }
+
+    const user = await getUserByEmail(email).catch(err => {
+      logger.error('Login database error:', err);
+      throw new Error('Database error during login');
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.Password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const roleData = await getRoleData(user);
+    const token = generateToken(user, roleData);
+
+    setAuthHeaders(res, token);
+    res.json({
+      message: 'Login successful!',
+      token,
+      role: user.Role,
+      redirect: `${user.Role.toLowerCase()}-dashboard.html`
+    });
+
+  } catch (error) {
+    logger.error('Login process error:', error);
+    res.status(500).json({ 
+      message: 'An error occurred during login',
+      error: error.message 
+    });
+  }
+});
+
 app.post('/signup', upload.single('image'), async (req, res) => {
   const { 
     name, 
@@ -200,8 +232,7 @@ app.post('/signup', upload.single('image'), async (req, res) => {
   const image = req.file ? req.file.buffer : null;
   const role = 'Applicant';
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!isValidEmail(email)) {
     return res.status(400).json({ message: 'Invalid email format.' });
   }
 
@@ -235,7 +266,7 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
       const newUserId = userResult.insertId;
 
-      // Insert into applicant table (without PreferredJobs column)
+      // Insert into applicant table
       const [applicantResult] = await connection.query(
         `INSERT INTO applicant 
         (UserID, DateOfBirth, Education, WorkExperience)
@@ -277,9 +308,10 @@ app.post('/signup', upload.single('image'), async (req, res) => {
   }
 });
 
-// Applicant Dashboard Endpoints
+// =============================================
+// USER PROFILE ROUTES
+// =============================================
 
-// Get current user (for authentication check)
 app.get('/users/me', authenticateToken, async (req, res) => {
   try {
     const [results] = await pool.query(
@@ -300,7 +332,106 @@ app.get('/users/me', authenticateToken, async (req, res) => {
   }
 });
 
-// Get applicant data by user ID
+app.put('/users/:userId/profile', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    if (req.user.userId != userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const { name, phone } = req.body;
+    const image = req.file ? req.file.buffer : null;
+
+    const updates = [];
+    const params = [];
+
+    if (name) {
+      updates.push('Name = ?');
+      params.push(name);
+    }
+    if (phone) {
+      updates.push('Phone = ?');
+      params.push(phone);
+    }
+    if (image) {
+      updates.push('Image = ?');
+      params.push(image);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No updates provided' });
+    }
+
+    const query = `UPDATE users SET ${updates.join(', ')} WHERE UserID = ?`;
+    params.push(userId);
+
+    await pool.query(query, params);
+    
+    const [updatedUser] = await pool.query(
+      'SELECT UserID, Name, Email, Phone, Role, Image FROM users WHERE UserID = ?',
+      [userId]
+    );
+    
+    const user = updatedUser[0];
+    if (user.Image) {
+      user.Image = user.Image.toString('base64');
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      user 
+    });
+    
+  } catch (error) {
+    logger.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Error updating profile' });
+  }
+});
+
+app.put('/users/:userId/password', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (req.user.userId != userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const [results] = await pool.query(
+      'SELECT Password FROM users WHERE UserID = ?',
+      [userId]
+    );
+
+    if (!results.length) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(currentPassword, results[0].Password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      'UPDATE users SET Password = ? WHERE UserID = ?',
+      [hashedPassword, userId]
+    );
+
+    res.json({ success: true, message: 'Password updated successfully' });
+    
+  } catch (error) {
+    logger.error('Error changing password:', error);
+    res.status(500).json({ message: 'Error changing password' });
+  }
+});
+
+// =============================================
+// APPLICANT DATA ROUTES
+// =============================================
+
 app.get('/applicants/user/:userId', authenticateToken, async (req, res) => {
   try {
     const [results] = await pool.query(`
@@ -330,7 +461,6 @@ app.get('/applicants/user/:userId', authenticateToken, async (req, res) => {
   }
 });
 
-// Get application stats for dashboard
 app.get('/applications/stats/:applicantId', authenticateToken, async (req, res) => {
   try {
     const { applicantId } = req.params;
@@ -350,10 +480,12 @@ app.get('/applications/stats/:applicantId', authenticateToken, async (req, res) 
   }
 });
 
-// Get recommended jobs for applicant
+// =============================================
+// JOB ROUTES
+// =============================================
+
 app.get('/jobs/recommended', authenticateToken, async (req, res) => {
   try {
-    // First get the applicant's preferences
     const [applicant] = await pool.query(
       `SELECT a.ApplicantID 
        FROM applicant a 
@@ -361,9 +493,7 @@ app.get('/jobs/recommended', authenticateToken, async (req, res) => {
       [req.user.userId]
     );
 
-    if (!applicant.length) {
-      return res.json([]);
-    }
+    if (!applicant.length) return res.json([]);
 
     const [preferences] = await pool.query(
       `SELECT JobField, JobType, Location 
@@ -372,11 +502,8 @@ app.get('/jobs/recommended', authenticateToken, async (req, res) => {
       [applicant[0].ApplicantID]
     );
 
-    if (!preferences.length) {
-      return res.json([]);
-    }
+    if (!preferences.length) return res.json([]);
 
-    // Rest of the function remains the same...
     let whereClauses = [];
     let queryParams = [];
     
@@ -414,87 +541,209 @@ app.get('/jobs/recommended', authenticateToken, async (req, res) => {
   }
 });
 
-// Get job details
-app.get('/jobs/:id', authenticateToken, (req, res) => {
-  const jobId = req.params.id;
-  
-  pool.query('SELECT * FROM jobs WHERE JobID = ?', [jobId], (err, results) => {
-    if (err) {
-      logger.error('Error fetching job:', err);
-      return res.status(500).json({ message: 'Error fetching job details' });
-    }
+app.get('/jobs', authenticateToken, async (req, res) => {
+  try {
+    const [jobs] = await pool.query(
+      'SELECT * FROM jobs WHERE CloseDate > NOW() ORDER BY CloseDate DESC'
+    );
+    res.json(jobs);
+  } catch (error) {
+    logger.error('Error fetching jobs:', error);
+    res.status(500).json({ message: 'Error fetching jobs' });
+  }
+});
+
+app.get('/jobs/:id', authenticateToken, async (req, res) => {
+  try {
+    const [job] = await pool.query('SELECT * FROM jobs WHERE JobID = ?', [req.params.id]);
     
-    if (results.length === 0) {
+    if (!job.length) {
       return res.status(404).json({ message: 'Job not found' });
     }
     
-    res.json(results[0]);
-  });
+    res.json(job[0]);
+  } catch (error) {
+    logger.error('Error fetching job:', error);
+    res.status(500).json({ message: 'Error fetching job details' });
+  }
 });
 
-// Search jobs
-app.get('/jobs/search', authenticateToken, (req, res) => {
-  const { search, type, location } = req.query;
-  
-  let query = 'SELECT * FROM jobs WHERE CloseDate > NOW()';
-  const params = [];
-  
-  if (search) {
-    query += ' AND (PositionType LIKE ? OR Description LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`);
-  }
-  
-  if (type) {
-    query += ' AND PositionType = ?';
-    params.push(type);
-  }
-  
-  if (location) {
-    query += ' AND Location LIKE ?';
-    params.push(`%${location}%`);
-  }
-  
-  // Changed from PostDate to CloseDate here
-  query += ' ORDER BY CloseDate DESC LIMIT 20';
-  
-  pool.query(query, params, (err, results) => {
-    if (err) {
-      logger.error('Error searching jobs:', err);
-      return res.status(500).json({ message: 'Error searching jobs' });
+app.get('/jobs/search', authenticateToken, async (req, res) => {
+  try {
+    const { search, type, location } = req.query;
+    
+    let query = 'SELECT * FROM jobs WHERE CloseDate > NOW()';
+    const params = [];
+    
+    if (search) {
+      query += ' AND (PositionType LIKE ? OR Description LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
     }
     
-    res.json(results);
-  });
-});
-
-// Get applications for applicant
-app.get('/applications/applicant/:applicantId', authenticateToken, (req, res) => {
-  const applicantId = req.params.applicantId;
-  
-  const query = `
-    SELECT a.*, j.PositionType as JobTitle, j.Location, j.PositionType
-    FROM applications a
-    JOIN jobs j ON a.JobID = j.JobID
-    WHERE a.ApplicantID = ?
-    ORDER BY a.ApplicationDate DESC
-  `;
-  
-  pool.query(query, [applicantId], (err, results) => {
-    if (err) {
-      logger.error('Error fetching applications:', err);
-      return res.status(500).json({ message: 'Error fetching applications' });
+    if (type) {
+      query += ' AND PositionType = ?';
+      params.push(type);
     }
     
+    if (location) {
+      query += ' AND Location LIKE ?';
+      params.push(`%${location}%`);
+    }
+    
+    query += ' ORDER BY CloseDate DESC LIMIT 20';
+    
+    const [results] = await pool.query(query, params);
     res.json(results);
-  });
+    
+  } catch (error) {
+    logger.error('Error searching jobs:', error);
+    res.status(500).json({ message: 'Error searching jobs' });
+  }
 });
 
-// Get current preferences (updated)
+// =============================================
+// APPLICATION ROUTES
+// =============================================
+
+app.post('/applications', authenticateToken, resumeUpload.single('resume'), async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const { jobId } = req.body;
+    const applicantId = req.user.applicantId;
+    
+    if (!jobId || !applicantId) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check for existing application within the transaction
+    const [existing] = await connection.query(
+      'SELECT * FROM applications WHERE JobID = ? AND ApplicantID = ? FOR UPDATE',
+      [jobId, applicantId]
+    );
+    
+    if (existing.length > 0) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'You have already applied for this job' });
+    }
+
+    const resume = req.file;
+    if (!resume) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'Resume file is required' });
+    }
+
+    const resumeBase64 = resume.buffer.toString('base64');
+
+    // Insert the application
+    await connection.query(
+      `INSERT INTO applications 
+       (JobID, ApplicantID, ApplicationDate, Status, ChangeStatus, Resume)
+       VALUES (?, ?, NOW(), 'Pending', 'Application Submitted', ?)`,
+      [jobId, applicantId, resumeBase64]
+    );
+
+    await connection.commit();
+    res.json({ 
+      success: true, 
+      message: 'Application submitted successfully' 
+    });
+    
+  } catch (error) {
+    await connection.rollback();
+    logger.error('Error submitting application:', error);
+    res.status(500).json({ message: 'Error submitting application' });
+  } finally {
+    connection.release();
+  }
+});
+
+app.get('/my-applications', authenticateToken, async (req, res) => {
+  try {
+    const applicantId = req.user.applicantId;
+    const statusFilter = req.query.status;
+    
+    let query = `
+      SELECT a.ApplicationID, a.Status, a.ChangeStatus, a.ApplicationDate,
+             j.JobName, j.PositionType, j.Location, j.SalaryRange, j.Description
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicantID = ?
+    `;
+    
+    const params = [applicantId];
+    
+    if (statusFilter && statusFilter !== 'All') {
+      query += ' AND a.Status = ?';
+      params.push(statusFilter);
+    }
+    
+    query += ' ORDER BY a.ApplicationDate DESC';
+    
+    const [applications] = await pool.query(query, params);
+    
+    res.json(applications);
+  } catch (error) {
+    logger.error('Error fetching applications:', error);
+    res.status(500).json({ message: 'Error fetching applications' });
+  }
+});
+
+app.get('/applications/:id', authenticateToken, async (req, res) => {
+  try {
+    const [application] = await pool.query(`
+      SELECT a.*, j.JobName, j.PositionType, j.Location, j.SalaryRange, j.Description
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicationID = ?
+    `, [req.params.id]);
+
+    if (!application.length) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    if (application[0].ApplicantID !== req.user.applicantId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    res.json(application[0]);
+  } catch (error) {
+    logger.error('Error fetching application:', error);
+    res.status(500).json({ message: 'Error fetching application details' });
+  }
+});
+
+app.get('/applications/:id/resume', authenticateToken, async (req, res) => {
+  try {
+    const [application] = await pool.query(
+      'SELECT Resume FROM applications WHERE ApplicationID = ? AND ApplicantID = ?',
+      [req.params.id, req.user.applicantId]
+    );
+
+    if (!application.length) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const pdfBuffer = Buffer.from(application[0].Resume, 'base64');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    logger.error('Error fetching resume:', error);
+    res.status(500).json({ message: 'Error fetching resume' });
+  }
+});
+
+// =============================================
+// PREFERENCE ROUTES
+// =============================================
+
 app.get('/applicants/:applicantId/preferences', authenticateToken, async (req, res) => {
   try {
     const { applicantId } = req.params;
     
-    // Verify ownership using promise syntax
     const [applicant] = await pool.query(
       'SELECT UserID FROM applicant WHERE ApplicantID = ?',
       [applicantId]
@@ -518,13 +767,11 @@ app.get('/applicants/:applicantId/preferences', authenticateToken, async (req, r
   }
 });
 
-// Update preferences (updated)
 app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, res) => {
   try {
-    const { preference } = req.body; // Now expects single preference object
+    const { preference } = req.body;
     const applicantId = req.params.applicantId;
 
-    // Verify the applicant exists and belongs to the authenticated user
     const [applicant] = await pool.query(
       'SELECT UserID FROM applicant WHERE ApplicantID = ?',
       [applicantId]
@@ -538,7 +785,6 @@ app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, r
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    // Check current count of preferences
     const [currentPrefs] = await pool.query(
       'SELECT COUNT(*) as count FROM preferred_jobs WHERE ApplicantID = ?',
       [applicantId]
@@ -551,7 +797,6 @@ app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, r
       });
     }
 
-    // Validate the single preference
     if (!preference || !preference.jobField) {
       return res.status(400).json({ 
         success: false,
@@ -563,7 +808,6 @@ app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, r
     await connection.beginTransaction();
 
     try {
-      // Insert the single new preference
       await connection.query(
         `INSERT INTO preferred_jobs
         (ApplicantID, JobField, JobType, Location, Salary)
@@ -597,12 +841,10 @@ app.put('/applicants/:applicantId/preferences', authenticateToken, async (req, r
   }
 });
 
-// Delete preference
 app.delete('/applicants/:applicantId/preferences/:prefId', authenticateToken, async (req, res) => {
   try {
     const { applicantId, prefId } = req.params;
 
-    // Verify ownership
     const [applicant] = await pool.query(
       'SELECT UserID FROM applicant WHERE ApplicantID = ?',
       [applicantId]
@@ -624,29 +866,12 @@ app.delete('/applicants/:applicantId/preferences/:prefId', authenticateToken, as
   }
 });
 
+// =============================================
+// SERVER STARTUP
+// =============================================
 
-// Middleware to authenticate JWT token
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: 'Authentication token missing' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-}
-
-// Add OPTIONS handler for preflight requests
 app.options('*', cors());
 
-// Start the server
 app.listen(port, () => {
   logger.info(`Server running at http://localhost:${port}`);
 });
