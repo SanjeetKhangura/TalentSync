@@ -2,7 +2,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Functionality to limit description with ellipsis
     const getBriefDescription = (description) => {
-        const wordLimit = 20; // Sets word limit
+        const wordLimit = 15; // Sets word limit
         const words = description.split(' ');
 
         if (words.length > wordLimit) {
@@ -17,12 +17,33 @@ document.addEventListener("DOMContentLoaded", () => {
         
         editButton.addEventListener('click', () => {
             const title = job.querySelector('.job-title').innerText;
+            const category = job.querySelector('.department').innerText.replace("Category: ", "");
+            const email = job.querySelector('.email').innerText;
+            const location = job.querySelector('.location').innerText;
+            const jobType = job.querySelector('.job-type').innerText;
             const description = job.querySelector('.job-description').innerText;
+
             const newTitle = prompt("Edit Job Title:", title);
+            const newCategory = prompt("Edit Job Category:", category);
+            const newEmail = prompt("Edit Job Email:", email);
+            const newLocation = prompt("Edit Job Location:", location);
+            const newJobType = prompt("Edit Job Type | Education | Work Experience:", jobType);
             const newDescription = prompt("Edit Job Description:", description);
 
             if (newTitle) {
                 job.querySelector('.job-title').innerText = newTitle;
+            }
+            if (newCategory) {
+                job.querySelector('.department').innerText = `Category: ${newCategory}`;
+            }
+            if (newEmail) {
+                job.querySelector('.email').innerHTML = `<i class="fas fa-envelope"></i>${newEmail}`;
+            }
+            if (newLocation) {
+                job.querySelector('.location').innerHTML = `<i class="fas fa-map-marker-alt"></i>${newLocation}`;
+            }
+            if (newJobType) {
+                job.querySelector('.job-type').innerHTML = `<i class="fas fa-info-circle"></i>${newJobType}`;
             }
             if (newDescription) {
                 job.querySelector('.job-description').innerText = getBriefDescription(newDescription);
@@ -48,14 +69,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     createJobPostButton.addEventListener('click', () => {
         const jobTitle = prompt("Enter Job Title:");
+        const category = prompt("Enter Job Category:");
+        const email = prompt("Enter Job Email:");
+        const location = prompt("Enter Job Location:");
+        const jobType = prompt("Enter Job Type | Education | Work Experience:");
         const jobDescription = prompt("Enter Job Description:");
 
-        if (jobTitle && jobDescription) {
+        if (jobTitle && category && location && jobType && jobDescription) {
             const newJobDiv = document.createElement('div');
             newJobDiv.className = 'job';
             newJobDiv.innerHTML = `
                 <h3 class="job-title">${jobTitle}</h3>
-                <p class="job-description">${getBriefDescription(jobDescription)}</p>
+                <p class="department">Category: ${category}</p>
+                <p class="email"><i class="fas fa-envelope"></i> ${email}</p>
+                <p class="location"><i class="fas fa-map-marker-alt"></i> ${location}</p>
+                <p class="job-type"><i class="fas fa-info-circle"></i>${jobType}</p>
+                <p class="job-description">Job Description: ${getBriefDescription(jobDescription)}</p>
                 <div class="button-wrapper">
                     <button class="edit-button">Edit</button>
                     <button class="remove-button">X</button>
@@ -73,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchTerm = searchInput.value.toLowerCase();
         document.querySelectorAll('.job').forEach(job => {
             const title = job.querySelector('.job-title').innerText.toLowerCase();
-
             // Show or hide job based on search term
             if (title.includes(searchTerm)) {
                 job.style.display = 'flex'; // Change 'block' to 'flex' for better layout
@@ -101,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Show or hide applications based on search term
             if (title.includes(searchTerm)) {
-                application.style.display = 'flex';
+                application.style.display = 'flex'; // Adjust to 'block' or 'flex' based on your CSS
             } else {
                 application.style.display = 'none';
             }

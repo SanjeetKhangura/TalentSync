@@ -13,14 +13,23 @@
 <body>
     <header>
         <div class="header-content">
+            <!-- Titles on the left -->
             <div class="header-titles">
                 <h1>TalentSync</h1>
                 <h2>Employee Central - Human Resources</h2>
             </div>
+            <!-- Navigation on the right -->
             <div class="icon-wrapper">
                 <a href="#"><i class="fas fa-home"></i> Home</a>
                 <a href="#"><i class="fas fa-envelope"></i> Mail</a>
-                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <div class="profile-dropdown">
+                    <a href="#" class="profile-link"><img src="path/to/placeholder-image.png"
+                            class="profile-placeholder">My Profile</a>
+                    <div class="dropdown-content">
+                        <a href="#"><i class="fas fa-user"></i> Profile Settings</a>
+                        <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -31,33 +40,32 @@
             <h2>Job Posts</h2>
             <div class="search-bar">
                 <input type="text" placeholder="Search...">
-                <button class="filter-button">Filters</button>
                 <button class="create-button">+</button>
             </div>
             <div class="job-posts-content">
                 <div class="job">
+                    <div class="button-wrapper">
+                        <button class="edit-button">Edit</button>
+                        <button class="remove-button">X</button>
+                    </div>
                     <h3 class="job-title">Project Manager</h3>
-                    <p class="job-description">Description</p>
+                    <p class="department">Category: Agriculture</p>
+                    <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
+                    <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
+                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years Experience</p>
+                    <p class="job-description">Job Description: ...</p>
+                </div>
+                <div class="job">
                     <div class="button-wrapper">
                         <button class="edit-button">Edit</button>
                         <button class="remove-button">X</button>
                     </div>
-                </div>
-                <div class="job">
                     <h3 class="job-title">Machine Operator</h3>
-                    <p class="job-description">Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="job">
-                    <h3 class="job-title">Engineer</h3>
-                    <p class="job-description">Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
+                    <p class="department">Category: Engineer</p>
+                    <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
+                    <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
+                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years Experience</p>
+                    <p class="job-description">Job Description: ...</p>
                 </div>
             </div>
         </section>
@@ -95,39 +103,54 @@
         </section>
 
         <!-- View applicants quadrant -->
-        <section class="view-applicants-container">
-            <h2>View Applicants</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="Search: Name, Due Date, Category">
-                <button class="create-button">+</button>
+<section class="view-applicants-container">
+    <h2>View Applicants</h2>
+    <div class="search-bar">
+        <input type="text" placeholder="Search: Name, Due Date, Category">
+    </div>
+    <div class="view-applicant-content">
+        <div class="user">
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+            <h3 class="view-job-title">Job Post Title</h3>
+            <p class="name">John McDavis</p>
+            <p class="application-due-date">Application Due Date</p>
+            <p class="user-category">Category</p>
+            <div class="button-wrapper">
+                <button class="details-button"><i class="fas fa-info-circle"></i></button>
             </div>
-            <div class="view-applicant-content">
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="name">John McDavis</p>
-                    <p class="details">Application Due Date | Category</p>
-                    <button class="details-button">Details</button>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="name">John McDavis</p>
-                    <p class="details">Application Due Date | Category</p>
-                    <button class="details-button">Details</button>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="name">John McDavis</p>
-                    <p class="details">Application Due Date | Category</p>
-                    <button class="details-button">Details</button>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user"></i></div>
-                    <p class="name">John McDavis</p>
-                    <p class="details">Application Due Date | Category</p>
-                    <button class="details-button">Details</button>
-                </div>
+        </div>
+        <div class="user">
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+            <h3 class="view-job-title">Job Post Title</h3>
+            <p class="name">John McDavis</p>
+            <p class="application-due-date">Application Due Date</p>
+            <p class="user-category">Category</p>
+            <div class="button-wrapper">
+                <button class="details-button"><i class="fas fa-info-circle"></i></button>
             </div>
-        </section>
+        </div>
+        <div class="user">
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+            <h3 class="view-job-title">Job Post Title</h3>
+            <p class="name">John McDavis</p>
+            <p class="application-due-date">Application Due Date</p>
+            <p class="user-category">Category</p>
+            <div class="button-wrapper">
+                <button class="details-button"><i class="fas fa-info-circle"></i></button>
+            </div>
+        </div>
+        <div class="user">
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+            <h3 class="view-job-title">Job Post Title</h3>
+            <p class="name">John McDavis</p>
+            <p class="application-due-date">Application Due Date</p>
+            <p class="user-category">Category</p>
+            <div class="button-wrapper">
+                <button class="details-button"><i class="fas fa-info-circle"></i></button>
+            </div>
+        </div>
+    </div>
+</section>
         
         <!-- Notifications quadrant -->
         <section class="notifications-container">
@@ -156,5 +179,4 @@
 
     <script src="hr-dashboard.js"></script>
 </body>
-
 </html>
