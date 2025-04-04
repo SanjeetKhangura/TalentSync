@@ -1,7 +1,7 @@
 // JOB POSTS QUADRANT FUNCTIONS
 document.addEventListener("DOMContentLoaded", () => {
     const getBriefDescription = (description) => {
-        const wordLimit = 15;
+        const wordLimit = 10;
         const words = description.split(' ');
 
         if (words.length > wordLimit) {
