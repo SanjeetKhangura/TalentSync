@@ -10,6 +10,7 @@
 </head>
 
 <!-- Header with title and navigation menu -->
+
 <body>
     <header>
         <div class="header-content">
@@ -52,7 +53,8 @@
                     <p class="department">Category: Agriculture</p>
                     <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
                     <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
-                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years Experience</p>
+                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years
+                        Experience</p>
                     <p class="job-description">Job Description: ...</p>
                 </div>
                 <div class="job">
@@ -64,12 +66,13 @@
                     <p class="department">Category: Engineer</p>
                     <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
                     <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
-                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years Experience</p>
+                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years
+                        Experience</p>
                     <p class="job-description">Job Description: ...</p>
                 </div>
             </div>
         </section>
-        
+
         <!-- Applicants quadrant -->
         <section class="applications-container">
             <h2>Applications</h2>
@@ -86,13 +89,6 @@
                     </div>
                 </div>
                 <div class="application">
-                    <h3 class="application-title">Farmer</h3>
-                    <p class="application-description">Applications: 3</p>
-                    <div class="button-wrapper">
-                        <button class="view-button">View</button>
-                    </div>
-                </div>
-                <div class="application">
                     <h3 class="application-title">Machine Operator</h3>
                     <p class="application-description">Applications: 8</p>
                     <div class="button-wrapper">
@@ -103,55 +99,74 @@
         </section>
 
         <!-- View applicants quadrant -->
-<section class="view-applicants-container">
-    <h2>View Applicants</h2>
-    <div class="search-bar">
-        <input type="text" placeholder="Search: Name, Due Date, Category">
-    </div>
-    <div class="view-applicant-content">
-        <div class="user">
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-            <h3 class="view-job-title">Job Post Title</h3>
-            <p class="name">John McDavis</p>
-            <p class="application-due-date">Application Due Date</p>
-            <p class="user-category">Category</p>
-            <div class="button-wrapper">
-                <button class="details-button"><i class="fas fa-info-circle"></i></button>
+        <section class="view-applicants-container">
+            <h2>View Applicants</h2>
+            <div class="search-bar">
+                <input type="text" placeholder="Search: Name, Due Date, Category">
+            </div>
+            <div class="view-applicant-content">
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <h3 class="view-job-title">Job Post Title</h3>
+                    <p class="name">Name</p>
+                    <p class="user-category">Category:</p>
+                    <p class="application-due-date">Application Due Date</p>
+                    <div class="button-wrapper">
+                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <h3 class="view-job-title">Project Manager</h3>
+                    <p class="name">Sara Tori</p>
+                    <p class="user-category">Category:</p>
+                    <p class="application-due-date">Application Due Date</p>
+                    <div class="button-wrapper">
+                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <h3 class="view-job-title">Job Post Title</h3>
+                    <p class="name">John McDavis</p>
+                    <p class="user-category">Category:</p>
+                    <p class="application-due-date">Application Due Date</p>
+                    <div class="button-wrapper">
+                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                </div>
+                <div class="user">
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                    <h3 class="view-job-title">Job Post Title</h3>
+                    <p class="name">Name</p>
+                    <p class="user-category">Category:</p>
+                    <p class="application-due-date">Application Due Date</p>
+                    <div class="button-wrapper">
+                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pop-Up Window Structure for view applicants quadrant-->
+        <div class="popup" id="applicant-popup" style="display:none; position:relative; z-index: 1000;">
+            <h2 class="view-job-title">Job Post Title</h2>
+            <div class="resume-container">
+                <div class="resume">
+                    <div class="resume-content">
+                        <p>resume file</p>
+                    </div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button class="pass">Pass</button>
+                <button class="reject">Reject</button>
             </div>
         </div>
-        <div class="user">
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-            <h3 class="view-job-title">Job Post Title</h3>
-            <p class="name">John McDavis</p>
-            <p class="application-due-date">Application Due Date</p>
-            <p class="user-category">Category</p>
-            <div class="button-wrapper">
-                <button class="details-button"><i class="fas fa-info-circle"></i></button>
-            </div>
-        </div>
-        <div class="user">
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-            <h3 class="view-job-title">Job Post Title</h3>
-            <p class="name">John McDavis</p>
-            <p class="application-due-date">Application Due Date</p>
-            <p class="user-category">Category</p>
-            <div class="button-wrapper">
-                <button class="details-button"><i class="fas fa-info-circle"></i></button>
-            </div>
-        </div>
-        <div class="user">
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-            <h3 class="view-job-title">Job Post Title</h3>
-            <p class="name">John McDavis</p>
-            <p class="application-due-date">Application Due Date</p>
-            <p class="user-category">Category</p>
-            <div class="button-wrapper">
-                <button class="details-button"><i class="fas fa-info-circle"></i></button>
-            </div>
-        </div>
-    </div>
-</section>
-        
+
+        <!-- Backdrop -->
+        <div class="backdrop" id="backdrop" style="display:none;"></div>
+
         <!-- Notifications quadrant -->
         <section class="notifications-container">
             <h2>Notifications</h2>
@@ -179,4 +194,5 @@
 
     <script src="hr-dashboard.js"></script>
 </body>
+
 </html>

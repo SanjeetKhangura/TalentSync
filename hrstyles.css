@@ -10,23 +10,23 @@ body {
 header {
     background-color: #2c3e50;
     color: white;
-    padding: 5px; 
+    padding: 5px;
 }
 
 /* Header content */
 .header-content {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    width: 100%; 
-    max-width: 1200px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
     margin: auto;
 }
 
 .header-titles {
     display: flex;
-    flex-direction: column; 
-    align-items: flex-start; 
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .header-titles h1 {
@@ -34,7 +34,7 @@ header {
 }
 
 .header-titles h2 {
-    margin-top: 5px; 
+    margin-top: 5px;
     margin-bottom: 5px;
 }
 
@@ -59,7 +59,7 @@ section {
 }
 
 /* Container Styles */
-.job-posts-container, .applications-container, .notifications-container {
+.job-posts-container, .view-applicants-container, .applications-container, .notifications-container {
     background-color: #2c3e50;
     border-radius: 10px;
     padding: 15px;
@@ -73,42 +73,43 @@ section {
     align-items: center;
 }
 
-/* View Applicants Container Styles */
-.view-applicants-container {
-    background-color: #2c3e50;
-    border-radius: 10px;
-    padding: 15px;
-    max-width: 600px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
+/* View Applicants Content Styles */
 .view-applicant-content {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);  /* Two columns */
+    grid-template-columns: repeat(2, 1fr);
+    /* Two columns */
     gap: 15px;
 }
 
+/* User Profile Styles */
 .user {
     background-color: #e0e0e0;
     border-radius: 15px;
     padding: 15px;
+    text-align: left;
     position: relative;
+    height: 150px;
+    width: 150px;
+    border: 1px solid #b0b0b0;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .user .avatar i {
     font-size: 50px;
+    line-height: 50px;
     margin-bottom: 10px;
-    text-align: left;
 }
 
 .user .view-job-title {
     color: #2c3e50;
-    font-size: 18px; 
-    font-weight: bold; 
+    font-size: 18px;
+    font-weight: bold;
     margin: 0;
     text-align: left;
-    flex-grow: 1; 
+    flex-grow: 1;
 }
 
 .user p {
@@ -116,14 +117,14 @@ section {
 }
 
 .user p.name {
-    font-size: 16px; 
-    font-weight: bold; 
+    font-size: 16px;
+    font-weight: bold;
     text-align: left;
 }
 
 .application-due-date, .user-category {
-    font-size: 13px;     /* Font size */
-    font-weight: normal;  /* No font weight */
+    font-size: 13px;
+    font-weight: normal;
 }
 
 /* Job Posts Styles (Job Title / Job Description) */
@@ -141,7 +142,7 @@ section {
 }
 
 /* Heading style */
-.job-posts-container h2, .applications-container h2, .notifications-container h2, .view-applicants-container h2 {
+h2 {
     color: #ecf0f1;
     text-align: center;
     margin: 0 0 20px;
@@ -158,11 +159,11 @@ section {
 
 /* Individual Job Details Segment */
 .department, .email, .location, .job-type, .job-description {
-    margin: 2px 0; /* Reduced margin to bring them closer together */
+    margin: 2px 0;
 }
 
 .job-type {
-    margin-bottom: 15px; /* Increased spacing between other details */
+    margin-bottom: 15px;
 }
 
 .notifications-content {
@@ -170,8 +171,8 @@ section {
 }
 
 .job p i {
-    margin-right: 5px; /* Space before icons */
-    color: black; /* Icon color */
+    margin-right: 5px;
+    color: black;
 }
 
 /* HR Staff content styles */
@@ -184,37 +185,6 @@ section {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px;
-}
-
-/* Applicants (users) Styles */
-.user {
-    background-color: #e0e0e0;
-    border-radius: 15px;
-    padding: 15px;
-    text-align: left;
-    position: relative;
-    height: auto;
-    border: 1px solid #b0b0b0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.user .avatar i {
-    font-size: 50px;
-    margin-bottom: 10px;
-}
-
-.user p.name {
-    margin-bottom: 10px;
-}
-
-.user p:first-of-type {
-    font-size: 15px;
-    font-weight: bold;
-    margin: 0;
-}
-
-.user p {
-    margin: 5px 0;
 }
 
 /* Item Styles */
@@ -233,14 +203,14 @@ section {
 }
 
 .job {
-    background-color: #e0e0e0; /* Darker post background */
+    background-color: #e0e0e0;
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px; 
-    flex: 1 1 300px; /* Adjust the flex property to maintain width */
-    height: 150px;    /* Ensure a fixed height for job posts */
-    display: flex;     /* Make job posts flex containers */
-    flex-direction: column; 
+    margin-bottom: 15px;
+    flex: 1 1 300px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
     position: relative;
 }
 
@@ -254,7 +224,7 @@ section {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    flex: 1; /* Extend input field */
+    flex: 1;
 }
 
 .view-applicants-container .search-bar input {
@@ -274,8 +244,19 @@ section {
     padding: 5px 10px;
 }
 
-.edit-button:hover, .remove-button:hover {
-    opacity: 0.8; 
+.filter-button, .create-button {
+    background-color: #7f8c8d;
+    color: white;
+    border: none;
+    height: 35px;
+    font-weight: bold;
+    margin-left: 5px;
+    border-radius: 8px;
+    padding: 5px 15px;
+}
+
+.edit-button:hover, .remove-button:hover, .details-button:hover {
+    opacity: 0.8;
 }
 
 .remove-button {
@@ -286,20 +267,15 @@ section {
     background-color: #2c3e50;
     color: white;
     border: none;
-    border-radius: 50%; /* Make it circular */
-    padding: 5px; /* Decrease padding to make it smaller */
+    border-radius: 50%;
+    /* Make it circular */
     cursor: pointer;
-    width: 30px; /* Set width for circular shape */
-    height: 30px; /* Set height for circular shape */
-    display: flex; /* Flexbox for centering icon */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-    position: relative; /* Positioning */
-    top: 0; /* Adjust as needed to move it up */
-}
-
-.details-button:hover {
-    opacity: 0.8;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 .create-button {
@@ -314,122 +290,193 @@ section {
     margin-left: 10px;
 }
 
-.filter-button, .create-button {
-    background-color: #7f8c8d;
-    color: white;
-    border: none;
-    height: 35px;
-    font-weight: bold;
-    margin-left: 5px;
-    border-radius: 8px;
-    padding: 5px 15px;
+.job .button-wrapper {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
 }
 
-.job .button-wrapper {
-    position: absolute; /* Enable absolute positioning */
-    top: 10px; /* Position it near the top */
-    right: 10px; /* Align it to the right */
-    display: flex;
-    gap: 5px; /* Gap between buttons */
+/* Pop-Up Window Styles */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    z-index: 1001;
+    width: 400px;
+}
+
+/* General styles for the backdrop */
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 999;
+}
+
+.popup {
+    width: 300px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.popup-content {
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 100%;
+}
+
+.resume-container {
+    height: 150px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.pass, .reject {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.pass {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.reject {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
 }
 
 /* Additional classes */
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
 .icon-wrapper {
     display: flex;
-    justify-content: flex-end; 
-    margin-left: auto; 
+    justify-content: flex-end;
+    margin-left: auto;
     font-size: 20px;
-    gap: 0px; 
-    margin-bottom: 0; 
+    gap: 0px;
+    margin-bottom: 0;
     align-items: flex-end;
 }
 
 .icon-wrapper a {
-    color: #ffffff; 
-    text-decoration: none; 
-    font-size: 18px; 
-    padding: 10px 15px; 
-    border-radius: 5px; 
-    display: inline-block; 
-    transition: background-color 0.3s, color 0.3s; 
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 18px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    display: inline-block;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .icon-wrapper a:hover {
-    background-color: #34495e; 
-    color: #ffffff; 
-    text-decoration: none; 
+    background-color: #34495e;
+    color: #ffffff;
+    text-decoration: none;
 }
 
 .button-wrapper {
-    position: absolute; /* Enable absolute positioning */
-    top: 10px;         /* Position it near the top */
-    right: 10px;       /* Align it to the right */
+    position: absolute;
+    top: 10px;
+    right: 10px;
     display: flex;
-    gap: 5px;          /* Gap between buttons */
+    gap: 5px;
 }
 
 /* Profile Dropdown Styles */
 .profile-dropdown {
-    position: relative; 
-    display: inline-block; 
+    position: relative;
+    display: inline-block;
 }
 
 .profile-dropdown a {
-    color: #ffffff; 
-    text-decoration: none; 
+    color: #ffffff;
+    text-decoration: none;
     padding: 10px 15px;
-    display: inline-block; 
-    transition: background-color 0.3s; 
+    display: inline-block;
+    transition: background-color 0.3s;
 }
 
 .profile-dropdown:hover .dropdown-content {
-    display: block; 
+    display: block;
 }
+
 /* Profile Link Styles */
 .profile-link {
-    color: #ffffff; 
-    text-decoration: none; 
-    padding: 10px 15px; 
-    display: flex; 
-    align-items: center; 
+    color: #ffffff;
+    text-decoration: none;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
 }
 
 /* Profile Placeholder Styles */
 .profile-placeholder {
-    width: 40px; 
-    height: 40px; 
-    border-radius: 50%; 
-    object-fit: cover; 
-    border: 2px solid #ffffff; 
-    margin-right: 5px; 
-    vertical-align: middle; 
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    margin-right: 5px;
+    vertical-align: middle;
 }
 
 /* Dropdown Content Styles */
 .dropdown-content {
-    display: none; 
-    position: absolute; 
-    background-color: white; 
-    min-width: 160px; 
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1; 
-    border-radius: 10px; 
+    z-index: 1;
+    border-radius: 10px;
 }
 
 .dropdown-content a {
-    color: black; 
-    padding: 12px 16px; 
-    text-decoration: none; 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    font-size: 14px; 
-    padding: 10px 12px; 
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    padding: 10px 12px;
 }
 
 .dropdown-content a:hover {
-    background-color: #d9d9d9; 
-    color: black; 
+    background-color: #d9d9d9;
+    color: black;
     border-radius: 10px;
 }
 
