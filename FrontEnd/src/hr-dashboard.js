@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // Removes job post from job posts quadrant
+    // Removes job post from job posts quadrant // Removes job post from job posts quadrant (if I take this out, it stops working... Solve for later)
     const attachRemoveFunctionality = (job) => {
         const removeButton = job.querySelector('.remove-button');
 
