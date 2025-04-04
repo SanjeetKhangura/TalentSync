@@ -69,26 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // Removes job post from job posts quadrant
-    const attachRemoveFunctionality = (job) => {
-        const removeButton = job.querySelector('.remove-button');
-
-        removeButton.addEventListener('click', () => {
-            const title = job.querySelector('.job-title').innerText;
-            if (confirm(`Deleting ${title}; Are you sure?`)) {
-                job.remove();
-                // Remove from applications section
-                const applicationDiv = [...document.querySelectorAll('.application')].find(app => {
-                    return app.querySelector('.application-title').innerText === title;
-                });
-                if (applicationDiv) {
-                    applicationDiv.remove();
-                    delete applicationsCount[title];
-                }
-            }
-        });
-    };
-
     // Creates new Job Post
     const createJobPostButton = document.querySelector('.job-posts-container .create-button');
     const jobPostsContent = document.querySelector('.job-posts-content');
