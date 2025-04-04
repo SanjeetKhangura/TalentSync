@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const attachJobFunctions = (job) => {
         attachEditFunctionality(job);
-        // Removed line to attachRemoveFunctionality(job);
     };
 
     const attachEditFunctionality = (job) => {
