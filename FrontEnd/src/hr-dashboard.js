@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const attachJobFunctions = (job) => {
         attachEditFunctionality(job);
-        attachRemoveFunctionality(job);
+        // Removed line to attachRemoveFunctionality(job);
     };
 
     const attachEditFunctionality = (job) => {
@@ -65,26 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (newTitle) {
                 job.querySelector('.job-title').innerText = newTitle;
                 updateApplicationsSection(title, newTitle);
-            }
-        });
-    };
-
-    // Removes job post from job posts quadrant // Removes job post from job posts quadrant (if I take this out, it stops working... Solve for later)
-    const attachRemoveFunctionality = (job) => {
-        const removeButton = job.querySelector('.remove-button');
-
-        removeButton.addEventListener('click', () => {
-            const title = job.querySelector('.job-title').innerText;
-            if (confirm(`Deleting ${title}; Are you sure?`)) {
-                job.remove();
-                // Remove from applications section
-                const applicationDiv = [...document.querySelectorAll('.application')].find(app => {
-                    return app.querySelector('.application-title').innerText === title;
-                });
-                if (applicationDiv) {
-                    applicationDiv.remove();
-                    delete applicationsCount[title];
-                }
             }
         });
     };
@@ -130,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="job-description">Job Description: ${getBriefDescription(jobDescription)}</p>
                 <div class="button-wrapper">
                     <button class="edit-button">Edit</button>
-                    <button class="remove-button">X</button>
+                    <!-- Removed remove button here -->
                 </div>
             `;
 
