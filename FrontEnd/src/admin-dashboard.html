@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="adminstyles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script>
+    window.jsPDF = window.jspdf.jsPDF;
+    </script>
     <title>TalentSync - Administrator</title>
 </head>
 
@@ -21,15 +26,12 @@
             <!-- Navigation on the right -->
             <div class="icon-wrapper">
                 <a href="#"><i class="fas fa-home"></i> Home</a>
-                <a href="#"><i class="fas fa-envelope"></i> Mail</a>
-                <a href="#"><i class="fas fa-file-alt"></i> Reports</a>
-                <a href="#"><i class="fas fa-key"></i> Account Management</a>
+                <a href="#" id="reports-link"><i class="fas fa-file-alt"></i> Reports</a>
                 <div class="profile-dropdown">
-                    <a href="#" class="profile-link"><img src="path/to/placeholder-image.png"
+                    <a href="#" class="profile-link"><img src="/Assets/default-avatar.png"
                             class="profile-placeholder">My Profile</a>
                     <div class="dropdown-content">
-                        <a href="#"><i class="fas fa-user"></i> Profile Settings</a>
-                        <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             </div>
@@ -41,30 +43,10 @@
         <section class="job-posts-container">
             <h2>Job Posts</h2>
             <div class="search-bar">
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Search jobs..." id="job-search">
             </div>
             <div class="job-posts-content">
-                <div class="job">
-                    <h3 class="job-title">Project Manager</h3>
-                    <p class="job-description">Description</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="job">
-                    <h3 class="job-title">Machine Operator</h3>
-                    <p class="job-description">Description</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="job">
-                    <h3 class="job-title">Engineer</h3>
-                    <p class="job-description">Description</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
+                <!-- Dynamic content will be inserted here by JavaScript -->
             </div>
         </section>
 
@@ -72,90 +54,11 @@
         <section class="categories-container">
             <h2>Categories</h2>
             <div class="search-bar">
-                <input type="text" placeholder="Search: Business, Engineering, ...">
-                <button class="create-button">+</button>
+                <input type="text" placeholder="Search categories..." id="category-search">
+                <button class="create-button" id="create-category">+</button>
             </div>
             <div class="categories-content">
-                <div class="category">
-                    <h3 class="category-title">Information Technology</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Engineering</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Education</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Agriculture</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Healthcare</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Management</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Law</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Entertainment</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Government</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="category">
-                    <h3 class="category-title">Finance</h3>
-                    <p class="category-description">Brief Description</p>
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
+                <!-- Dynamic content will be inserted here by JavaScript -->
             </div>
         </section>
 
@@ -163,62 +66,11 @@
         <section class="hr-staff-container">
             <h2>Human Resources Staff</h2>
             <div class="search-bar">
-                <input type="text" placeholder="Search: ID, Name">
-                <button class="create-button">+</button>
+                <input type="text" placeholder="Search staff..." id="staff-search">
+                <button class="create-button" id="create-staff">+</button>
             </div>
             <div class="hr-staff-content">
-                <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <p class="staff-id">001</p>
-                    <div class="staff-details">
-                        <p class="name first-name">James McVoy</p>
-                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
-                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
-                    </div>
-                    <div class="button-wrapper">
-                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <p class="staff-id">002</p>
-                    <div class="staff-details">
-                        <p class="name first-name">Sarah Taylor</p>
-                        <p class="email"><i class="fas fa-envelope"></i><span>sarah@example.com</span></p>
-                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
-                    </div>
-                    <div class="button-wrapper">
-                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <p class="staff-id">001</p>
-                    <div class="staff-details">
-                        <p class="name first-name">James McVoy</p>
-                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
-                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
-                    </div>
-                    <div class="button-wrapper">
-                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="staff-member">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <p class="staff-id">001</p>
-                    <div class="staff-details">
-                        <p class="name first-name">James McVoy</p>
-                        <p class="email"><i class="fas fa-envelope"></i><span>james@example.com</span></p>
-                        <p class="phone"><i class="fas fa-phone"></i><span>123-456-7890</span></p>
-                    </div>
-                    <div class="button-wrapper">
-                        <button class="edit-button"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
+                <!-- Dynamic content will be inserted here by JavaScript -->
             </div>
         </section>
 
@@ -226,26 +78,46 @@
         <section class="notifications-container">
             <h2>Notifications</h2>
             <div class="search-bar">
-                <input type="text" placeholder="Search Notifications...">
+                <input type="text" placeholder="Search notifications..." id="notification-search">
             </div>
             <div class="notifications-content">
-                <div class="notification">
-                    <h3 class="notification-title">Request For Removal - HR</h3>
-                    <p class="notification-description">There’s a job post...</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="notification">
-                    <h3 class="notification-title">Notice</h3>
-                    <p class="notification-description">Everyone in room...</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
+                <!-- Dynamic content will be inserted here by JavaScript -->
             </div>
         </section>
+
+        <div id="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading dashboard data...</p>
+        </div>
     </main>
+
+    <div id="reports-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-island">
+            <button class="close-modal">&times;</button>
+            <h3>Generate Report</h3>
+            <div class="report-options">
+                <div class="report-option" data-type="monthly">
+                    <h4><i class="fas fa-calendar-alt"></i> Monthly Report</h4>
+                    <p>Applications, hires, and screening stats for the current month</p>
+                </div>
+                <div class="report-option" data-type="yearly">
+                    <h4><i class="fas fa-chart-line"></i> Annual Report</h4>
+                    <p>Year-to-date hiring trends and performance metrics</p>
+                </div>
+                <div class="report-option" data-type="category">
+                    <h4><i class="fas fa-tags"></i> Category Analysis</h4>
+                    <p>Job category statistics and application rates</p>
+                </div>
+            </div>
+            <div class="date-range-selector" style="display:none;">
+                <label for="start-date">From:</label>
+                <input type="date" id="start-date">
+                <label for="end-date">To:</label>
+                <input type="date" id="end-date">
+                <button class="generate-btn">Generate</button>
+            </div>
+        </div>
+    </div>
 
     <script src="admin-dashboard.js"></script>
 </body>

@@ -29,11 +29,13 @@ const logger = winston.createLogger({
 // Middleware Setup
 app.use(cors({
   origin: 'http://localhost:52330',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Authorization'],
   credentials: true
 }));
+
+app.options('*', cors());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -155,18 +157,35 @@ function setAuthHeaders(res, token) {
 // =============================================
 
 function authenticateToken(req, res, next) {
+  
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) {
+  
+  const cookieToken = req.cookies?.token;
+  
+  
+  const authToken = token || cookieToken;
+
+  if (!authToken) {
     return res.status(401).json({ message: 'Authentication token missing' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  
+  jwt.verify(authToken, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token' });
     }
-    req.user = user;
+    
+    
+    req.user = {
+      userId: user.userId,      
+      role: user.role,         
+      ...(user.applicantId && { applicantId: user.applicantId }),
+      ...(user.hrId && { hrId: user.hrId }),
+      ...(user.adminId && { adminId: user.adminId })
+    };
+    
     next();
   });
 }
@@ -314,18 +333,45 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 app.get('/users/me', authenticateToken, async (req, res) => {
   try {
+    // 1. Original query remains unchanged
     const [results] = await pool.query(
-      'SELECT UserID, Name, Email, Phone, Role, Image FROM users WHERE UserID = ?', 
+      'SELECT UserID, Name, Email, Phone, Role, Image FROM users WHERE UserID = ?',
       [req.user.userId]
     );
-    
+
     if (!results.length) return res.status(404).json({ error: 'User not found' });
-    
+
     const user = results[0];
+    
+    // 2. Add admin data without modifying original structure
+    if (user.Role === 'Admin') {
+      const [adminData] = await pool.query(
+        'SELECT AdminID FROM admin WHERE UserID = ?',
+        [user.UserID]
+      );
+      user.AdminID = adminData[0]?.AdminID;
+    }
+
+    // 3. Maintain original image handling
     if (user.Image) {
       user.Image = user.Image.toString('base64');
     }
-    res.json(user);
+
+    // 4. Return BOTH formats for compatibility
+    res.json({
+      // Original exact fields (PascalCase)
+      ...user,
+      // New camelCase fields
+      userId: user.UserID,
+      name: user.Name,
+      email: user.Email,
+      phone: user.Phone,
+      role: user.Role,
+      image: user.Image,
+      // Optional admin field
+      ...(user.AdminID && { adminId: user.AdminID })
+    });
+
   } catch (err) {
     console.error('DB Error:', err);
     res.status(500).json({ error: 'Database error' });
@@ -618,7 +664,6 @@ app.post('/applications', authenticateToken, resumeUpload.single('resume'), asyn
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Check for existing application within the transaction
     const [existing] = await connection.query(
       'SELECT * FROM applications WHERE JobID = ? AND ApplicantID = ? FOR UPDATE',
       [jobId, applicantId]
@@ -867,10 +912,676 @@ app.delete('/applicants/:applicantId/preferences/:prefId', authenticateToken, as
 });
 
 // =============================================
-// SERVER STARTUP
+// ADMIN ROUTES
 // =============================================
 
-app.options('*', cors());
+// Updated Jobs Endpoint
+app.get('/admin/jobs', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [jobs] = await pool.query(`
+      SELECT 
+        j.*,
+        u.Name AS PostedByName,
+        c.Name AS CategoryName
+      FROM jobs j
+      JOIN users u ON j.PostedBy = u.UserID
+      LEFT JOIN categories c ON j.CategoryID = c.CategoryID
+      ORDER BY j.CloseDate DESC
+    `);
+    
+    res.json({
+      success: true,
+      jobs
+    });
+    
+  } catch (error) {
+    logger.error('Error fetching jobs:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching jobs',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+app.post('/admin/jobs', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { 
+    JobName = '',
+    PositionType = 'Full-time',
+    CategoryID = null,
+    Location = '',
+    MinEducation = null,
+    MinExperience = null,
+    Description = '',
+    SalaryRange = null,
+    CloseDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  } = req.body;
+
+  // Validation
+  const errors = [];
+  if (!JobName.trim()) errors.push('JobName is required');
+  if (!Location.trim()) errors.push('Location is required');
+  if (!['Full-time', 'Part-time', 'Contract', 'Internship'].includes(PositionType)) {
+    errors.push('Invalid PositionType');
+  }
+  if (new Date(CloseDate) < new Date()) errors.push('CloseDate must be in the future');
+
+  if (errors.length > 0) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Validation failed',
+      errors
+    });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      
+      const [result] = await connection.query(
+        `INSERT INTO jobs 
+         (JobName, PositionType, CategoryID, Location, 
+          MinEducation, MinExperience, Description, 
+          SalaryRange, CloseDate, PostedBy)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          JobName, 
+          PositionType, 
+          CategoryID,
+          Location,
+          MinEducation,
+          MinExperience,
+          Description,
+          SalaryRange,
+          CloseDate,
+          req.user.userId
+        ]
+      );
+
+      const [newJob] = await connection.query(`
+        SELECT 
+          j.*,
+          u.Name AS PostedByName,
+          c.Name AS CategoryName
+        FROM jobs j
+        JOIN users u ON j.PostedBy = u.UserID
+        LEFT JOIN categories c ON j.CategoryID = c.CategoryID
+        WHERE j.JobID = ?
+      `, [result.insertId]);
+
+      await connection.commit();
+
+      res.status(201).json({ 
+        success: true,
+        message: 'Job created successfully',
+        job: newJob[0]
+      });
+
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    logger.error('Error creating job:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+
+app.delete('/admin/jobs/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') {
+    return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    await pool.query('DELETE FROM jobs WHERE JobID = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    res.status(500).json({ message: 'Error deleting job' });
+  }
+});
+
+// Category Management
+app.get('/admin/categories', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+  }
+  
+  try {
+      const [categories] = await pool.query('SELECT * FROM categories');
+      res.json({ 
+          success: true,
+          categories 
+      });
+  } catch (error) {
+      logger.error('Database error:', error);
+      res.status(500).json({ 
+          success: false,
+          message: 'Failed to load categories',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+  }
+});
+
+app.post('/admin/categories', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { Name } = req.body;
+  
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO categories (Name) VALUES (?)',
+      [Name]
+    );
+    
+    res.json({ success: true, categoryId: result.insertId });
+  } catch (error) {
+    logger.error('Error creating category:', error);
+    res.status(500).json({ message: 'Error creating category' });
+  }
+});
+
+app.put('/admin/categories/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { Name } = req.body;
+  
+  try {
+    await pool.query(
+      'UPDATE categories SET Name = ? WHERE CategoryID = ?',
+      [Name, req.params.id]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error updating category:', error);
+    res.status(500).json({ message: 'Error updating category' });
+  }
+});
+
+// HR Staff Management
+app.get('/admin/hr-staff', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [staff] = await pool.query(`
+      SELECT hs.HRID, u.UserID, u.Name, u.Email, u.Phone, hs.WorkingID 
+      FROM hr_staff hs
+      JOIN users u ON hs.UserID = u.UserID
+    `);
+    res.json(staff);
+  } catch (error) {
+    logger.error('Error fetching HR staff:', error);
+    res.status(500).json({ message: 'Error fetching HR staff' });
+  }
+});
+
+app.post('/admin/hr-staff', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { Name, Email, Phone, Password, WorkingID } = req.body;
+  
+  try {
+    const hashedPassword = await bcrypt.hash(Password, 10);
+    const connection = await pool.getConnection();
+    
+    try {
+      await connection.beginTransaction();
+
+      const [userResult] = await connection.query(
+        `INSERT INTO users (Name, Email, Phone, Role, Password)
+         VALUES (?, ?, ?, 'HR', ?)`,
+        [Name, Email, Phone, hashedPassword]
+      );
+
+      const newUserId = userResult.insertId;
+
+      await connection.query(
+        `INSERT INTO hr_staff (UserID, WorkingID)
+         VALUES (?, ?)`,
+        [newUserId, WorkingID]
+      );
+
+      await connection.commit();
+      res.json({ success: true });
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    logger.error('Error creating HR staff:', error);
+    res.status(500).json({ message: 'Error creating HR staff' });
+  }
+});
+
+app.delete('/admin/hr-staff/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [hrStaff] = await connection.query(
+      'SELECT UserID FROM hr_staff WHERE HRID = ?',
+      [req.params.id]
+    );
+
+    if (!hrStaff.length) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'HR staff not found' });
+    }
+
+    await connection.query(
+      'DELETE FROM hr_staff WHERE HRID = ?',
+      [req.params.id]
+    );
+
+    await connection.query(
+      'DELETE FROM users WHERE UserID = ?',
+      [hrStaff[0].UserID]
+    );
+
+    await connection.commit();
+    res.json({ success: true });
+  } catch (error) {
+    if (connection) await connection.rollback();
+    logger.error('Error deleting HR staff:', error);
+    res.status(500).json({ message: 'Error deleting HR staff' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Notifications
+app.get('/admin/notifications', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [notifications] = await pool.query(`
+      SELECT n.*, u.Name as UserName 
+      FROM notifications n
+      JOIN users u ON n.UserID = u.UserID
+      ORDER BY n.SendDate DESC
+    `);
+    res.json(notifications);
+  } catch (error) {
+    logger.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Error fetching notifications' });
+  }
+});
+
+app.post('/admin/notifications', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { UserID, Message } = req.body;
+  
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO notifications (UserID, Message, SendDate)
+       VALUES (?, ?, NOW())`,
+      [UserID, Message]
+    );
+    
+    res.json({ success: true, notificationId: result.insertId });
+  } catch (error) {
+    logger.error('Error creating notification:', error);
+    res.status(500).json({ message: 'Error creating notification' });
+  }
+});
+
+app.delete('/admin/notifications/:id', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  try {
+    await pool.query('DELETE FROM notifications WHERE NotificationID = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error deleting notification:', error);
+    res.status(500).json({ message: 'Error deleting notification' });
+  }
+});
+
+// Categories Endpoint
+app.get('/admin/categories', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [categories] = await pool.query('SELECT * FROM categories');
+    res.json({
+      success: true,
+      categories
+    });
+  } catch (error) {
+    logger.error('Error fetching categories:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching categories'
+    });
+  }
+});
+
+// HR Staff Endpoint
+app.get('/admin/hr-staff', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [staff] = await pool.query(`
+      SELECT 
+        hs.HRID,
+        u.UserID,
+        u.Name,
+        u.Email,
+        u.Phone,
+        hs.WorkingID
+      FROM hr_staff hs
+      JOIN users u ON hs.UserID = u.UserID
+    `);
+    res.json({
+      success: true,
+      staff
+    });
+  } catch (error) {
+    logger.error('Error fetching HR staff:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching HR staff'
+    });
+  }
+});
+
+// Notifications Endpoint
+app.get('/admin/notifications', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  
+  try {
+    const [notifications] = await pool.query(`
+      SELECT 
+        n.*,
+        u.Name AS UserName
+      FROM notifications n
+      JOIN users u ON n.UserID = u.UserID
+      ORDER BY n.SendDate DESC
+    `);
+    res.json({
+      success: true,
+      notifications
+    });
+  } catch (error) {
+    logger.error('Error fetching notifications:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching notifications'
+    });
+  }
+});
+
+// Get jobs in a specific category
+app.get('/admin/categories/:id/jobs', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  try {
+    const [jobs] = await pool.query(`
+      SELECT j.* FROM jobs j
+      WHERE j.CategoryID = ?
+      ORDER BY j.CloseDate DESC
+    `, [req.params.id]);
+    
+    res.json(jobs);
+  } catch (error) {
+    logger.error('Error fetching category jobs:', error);
+    res.status(500).json({ message: 'Error fetching category jobs' });
+  }
+});
+
+// Assign job to category
+app.put('/admin/jobs/:id/category', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { CategoryID } = req.body;
+  
+  try {
+    await pool.query(
+      'UPDATE jobs SET CategoryID = ? WHERE JobID = ?',
+      [CategoryID, req.params.id]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error updating job category:', error);
+    res.status(500).json({ message: 'Error updating job category' });
+  }
+});
+
+// =============================================
+// REPORT GENERATION ROUTES
+// =============================================
+
+// 1. Monthly Report Implementation
+async function generateMonthlyReport(startDate, endDate) {
+  const [metrics] = await pool.query(`
+      SELECT 
+          COUNT(*) as totalApplications,
+          SUM(CASE WHEN Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          SUM(CASE WHEN Status = 'Next Step' THEN 1 ELSE 0 END) as shortlisted,
+          SUM(CASE WHEN Status = 'Screened Out' THEN 1 ELSE 0 END) as screenedOut,
+          SUM(CASE WHEN a.Status = 'Hired' THEN j.SalaryRange ELSE 0 END) as totalSalary
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+  `, [startDate, endDate]);
+
+  // 2. Get top performing jobs (unchanged)
+  const [topJobs] = await pool.query(`
+      SELECT 
+          j.JobID,
+          j.JobName,
+          COUNT(a.ApplicationID) as applications,
+          SUM(CASE WHEN a.Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          ROUND(AVG(j.SalaryRange), 2) as avgSalary
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+      GROUP BY j.JobID, j.JobName
+      ORDER BY applications DESC
+      LIMIT 5
+  `, [startDate, endDate]);
+
+  return {
+      metrics: {
+          ...metrics[0],
+          avgSalary: metrics[0].totalSalary / (metrics[0].hires || 1)
+      },
+      topJobs,
+      // Remove sources from return object
+      timePeriod: `${startDate} to ${endDate}`
+  };
+}
+
+// 2. Yearly Report Implementation
+async function generateYearlyReport(startDate, endDate) {
+  const [monthlyTrends] = await pool.query(`
+      SELECT 
+          DATE_FORMAT(ApplicationDate, '%Y-%m') as month,
+          COUNT(*) as applications,
+          SUM(CASE WHEN Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          SUM(CASE WHEN Status = 'Next Step' THEN 1 ELSE 0 END) as shortlisted
+      FROM applications
+      WHERE ApplicationDate BETWEEN ? AND ?
+      GROUP BY DATE_FORMAT(ApplicationDate, '%Y-%m')
+      ORDER BY month ASC
+  `, [startDate, endDate]);
+
+  const [departmentStats] = await pool.query(`
+      SELECT 
+          c.Name as category,
+          COUNT(a.ApplicationID) as applications,
+          SUM(CASE WHEN a.Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          ROUND(AVG(j.SalaryRange), 2) as avgSalary
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      LEFT JOIN categories c ON j.CategoryID = c.CategoryID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+      GROUP BY c.Name
+      ORDER BY applications DESC
+  `, [startDate, endDate]);
+
+  const [yearlySummary] = await pool.query(`
+      SELECT 
+          COUNT(*) as totalApplications,
+          SUM(CASE WHEN Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          SUM(CASE WHEN Status = 'Next Step' THEN 1 ELSE 0 END) as shortlisted,
+          SUM(CASE WHEN a.Status = 'Hired' THEN j.SalaryRange ELSE 0 END) as totalSalary
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+  `, [startDate, endDate]);
+
+  return {
+      monthlyTrends,
+      departmentStats,
+      yearlySummary: {
+          ...yearlySummary[0],
+          avgSalary: yearlySummary[0].totalSalary / (yearlySummary[0].hires || 1),
+          hireRate: ((yearlySummary[0].hires / yearlySummary[0].totalApplications) * 100).toFixed(1)
+      },
+      timePeriod: `${startDate} to ${endDate}`
+  };
+}
+
+// 3. Category Analysis Implementation
+async function generateCategoryReport(startDate, endDate) {
+  const [categoryPerformance] = await pool.query(`
+      SELECT 
+          c.CategoryID,
+          c.Name as category,
+          COUNT(a.ApplicationID) as applications,
+          SUM(CASE WHEN a.Status = 'Hired' THEN 1 ELSE 0 END) as hires,
+          SUM(CASE WHEN a.Status = 'Next Step' THEN 1 ELSE 0 END) as shortlisted,
+          ROUND((SUM(CASE WHEN a.Status = 'Hired' THEN 1 ELSE 0 END) / COUNT(a.ApplicationID) * 100, 2) as hireRate,
+          ROUND(AVG(j.SalaryRange), 2) as avgSalary,
+          MIN(j.SalaryRange) as minSalary,
+          MAX(j.SalaryRange) as maxSalary
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      JOIN categories c ON j.CategoryID = c.CategoryID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+      GROUP BY c.CategoryID, c.Name
+      ORDER BY applications DESC
+  `, [startDate, endDate]);
+
+  const [timeToHire] = await pool.query(`
+      SELECT 
+          c.Name as category,
+          AVG(DATEDIFF(a.StatusUpdateDate, a.ApplicationDate)) as avgDaysToHire
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      JOIN categories c ON j.CategoryID = c.CategoryID
+      WHERE a.Status = 'Hired'
+      AND a.ApplicationDate BETWEEN ? AND ?
+      GROUP BY c.Name
+  `, [startDate, endDate]);
+
+  const [sourcesByCategory] = await pool.query(`
+      SELECT 
+          c.Name as category,
+          a.Source,
+          COUNT(*) as count
+      FROM applications a
+      JOIN jobs j ON a.JobID = j.JobID
+      JOIN categories c ON j.CategoryID = c.CategoryID
+      WHERE a.ApplicationDate BETWEEN ? AND ?
+      GROUP BY c.Name, a.Source
+      ORDER BY c.Name, count DESC
+  `, [startDate, endDate]);
+
+  return {
+      categoryPerformance,
+      timeToHire,
+      sourcesByCategory,
+      timePeriod: `${startDate} to ${endDate}`
+  };
+}
+
+// Report Generation Endpoint
+app.post('/admin/reports', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Unauthorized' });
+  }
+
+  const { reportType, startDate, endDate } = req.body;
+
+  // Validate inputs
+  if (!startDate || !endDate || new Date(startDate) > new Date(endDate)) {
+      return res.status(400).json({ 
+          success: false,
+          message: 'Invalid date range provided' 
+      });
+  }
+
+  const validReportTypes = ['monthly', 'yearly', 'category'];
+  if (!validReportTypes.includes(reportType)) {
+      return res.status(400).json({ 
+          success: false,
+          message: 'Invalid report type specified' 
+      });
+  }
+
+  try {
+      let reportData;
+      
+      switch (reportType) {
+          case 'monthly':
+              reportData = await generateMonthlyReport(startDate, endDate);
+              break;
+          case 'yearly':
+              reportData = await generateYearlyReport(startDate, endDate);
+              break;
+          case 'category':
+              reportData = await generateCategoryReport(startDate, endDate);
+              break;
+      }
+
+      // Add metadata
+      reportData.generatedAt = new Date().toISOString();
+      reportData.generatedBy = req.user.userId;
+
+      res.json({
+          success: true,
+          reportType,
+          startDate,
+          endDate,
+          data: reportData
+      });
+
+  } catch (error) {
+      logger.error('Error generating report:', error);
+      res.status(500).json({ 
+          success: false,
+          message: 'Error generating report',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+  }
+});
+
+// =============================================
+// SERVER STARTUP
+// =============================================
 
 app.listen(port, () => {
   logger.info(`Server running at http://localhost:${port}`);
