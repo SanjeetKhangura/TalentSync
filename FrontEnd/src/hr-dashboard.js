@@ -1,7 +1,7 @@
 // JOB POSTS QUADRANT FUNCTIONS
 document.addEventListener("DOMContentLoaded", () => {
     const getBriefDescription = (description) => {
-        const wordLimit = 10;
+        const wordLimit = 15;
         const words = description.split(' ');
 
         if (words.length > wordLimit) {
@@ -65,6 +65,26 @@ document.addEventListener("DOMContentLoaded", () => {
             if (newTitle) {
                 job.querySelector('.job-title').innerText = newTitle;
                 updateApplicationsSection(title, newTitle);
+            }
+        });
+    };
+
+    // Removes job post from job posts quadrant
+    const attachRemoveFunctionality = (job) => {
+        const removeButton = job.querySelector('.remove-button');
+
+        removeButton.addEventListener('click', () => {
+            const title = job.querySelector('.job-title').innerText;
+            if (confirm(`Deleting ${title}; Are you sure?`)) {
+                job.remove();
+                // Remove from applications section
+                const applicationDiv = [...document.querySelectorAll('.application')].find(app => {
+                    return app.querySelector('.application-title').innerText === title;
+                });
+                if (applicationDiv) {
+                    applicationDiv.remove();
+                    delete applicationsCount[title];
+                }
             }
         });
     };
@@ -219,11 +239,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Function to handle deleting notifications
     const attachRemoveNotificationFunctionality = (notification) => {
         const removeButton = notification.querySelector('.remove-button');
-
+        
         removeButton.addEventListener('click', () => {
             const title = notification.querySelector('.notification-title').innerText;
-            notification.remove(); // Remove the notification
-
+                notification.remove(); // Remove the notification
+            
         });
     };
 
@@ -231,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.querySelector('.notifications-container .search-bar input');
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
-
+        
         // Filter notifications based on the search term
         document.querySelectorAll('.notification').forEach(notification => {
             const title = notification.querySelector('.notification-title').innerText.toLowerCase();
