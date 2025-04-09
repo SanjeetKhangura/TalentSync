@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const attachJobFunctions = (job) => {
         attachEditFunctionality(job);
+        // Removed line to attachRemoveFunctionality(job);
     };
 
     const attachEditFunctionality = (job) => {
@@ -157,10 +158,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const applicationTitle = button.closest('.application').querySelector('.application-title').innerText;
 
             // Simulated data for applications count; replace with actual data
+            // Place holder for now until actual data; should just show HR the # of applicants who've applied
             const applicationCount = Math.floor(Math.random() * 10);
             alert(`Total applications for ${applicationTitle}: ${applicationCount}`);
         });
     });
+    // View button supposed to show applicant names so that HR can see who applied and search the name in 
+    // "View Applicants" quadrant
 });
 
 // VIEW APPLICANTS QUADRANT FUNCTIONS
@@ -169,20 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailButtons = document.querySelectorAll('.details-button');
     const popup = document.getElementById('applicant-popup');
     const backdrop = document.getElementById('backdrop');
-
-    // Function for showing the popup
-    function showPopup(jobTitle) {
-        popup.querySelector('.view-job-title').innerText = jobTitle;
-
-        // Display the popup and the backdrop
-        popup.style.display = 'block';
-        backdrop.style.display = 'block';
-    }
-
-    function hidePopup() {
-        popup.style.display = 'none';
-        backdrop.style.display = 'none';
-    }
 
     searchInput.addEventListener('input', () => {
         const searchTerm = searchInput.value.toLowerCase();
@@ -197,20 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    detailButtons.forEach(button => {
-        button.addEventListener('click', (event) => {
-            const user = event.target.closest('.user');
-            const applicantName = user.querySelector('.name').innerText;
-            showPopup(applicantName); // Call updated showPopup
-        });
-    });
+    // Detail button function: shows applicant's resume and options to pass or not (decided by HR)
+    // Detail button here?
 
-    // Close the popup if clicked outside of it
-    window.addEventListener('click', (event) => {
-        if (event.target === backdrop) { // Check if backdrop is clicked
-            hidePopup();
-        }
-    });
 });
 
 // NOTIFICATIONS QUADRANT FUNCTIONS
