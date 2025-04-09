@@ -1,61 +1,61 @@
-// Global variables
-let currentAdminId = null;
+// // Global variables
+// let currentAdminId = null;
 
-//Verify admin status and permissions
-async function verifyAdmin() {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No authentication token');
+// //Verify admin status and permissions
+// async function verifyAdmin() {
+//     const token = localStorage.getItem('token');
+//     if (!token) throw new Error('No authentication token');
   
-    try {
-      const response = await fetch('http://localhost:3000/users/me', {
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+//     try {
+//       const response = await fetch('http://localhost:3000/users/me', {
+//         headers: { 
+//           'Authorization': `Bearer ${token}`,
+//           'Content-Type': 'application/json'
+//         },
+//         credentials: 'include'
+//       });
   
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Authentication failed');
-      }
+//       if (!response.ok) {
+//         const error = await response.json();
+//         throw new Error(error.message || 'Authentication failed');
+//       }
       
-      const user = await response.json();
+//       const user = await response.json();
       
-      if (user.role !== 'Admin' || !user.adminId) {
-        throw new Error('Admin privileges required');
-      }
+//       if (user.role !== 'Admin' || !user.adminId) {
+//         throw new Error('Admin privileges required');
+//       }
   
-      return {
-        userId: user.userId,
-        adminId: user.adminId,
-        name: user.name
-      };
-    } catch (error) {
-      console.error('Auth error:', error);
-      throw error;
-    }
-}
+//       return {
+//         userId: user.userId,
+//         adminId: user.adminId,
+//         name: user.name
+//       };
+//     } catch (error) {
+//       console.error('Auth error:', error);
+//       throw error;
+//     }
+// }
 
-// Initialize dashboard
-document.addEventListener("DOMContentLoaded", async () => {
-    console.log('Stored token:', localStorage.getItem('token'));
+// // Initialize dashboard
+// document.addEventListener("DOMContentLoaded", async () => {
+//     console.log('Stored token:', localStorage.getItem('token'));
     
-    try {
-      const adminData = await verifyAdmin();
-      currentAdminId = adminData.adminId;
+//     try {
+//       const adminData = await verifyAdmin();
+//       currentAdminId = adminData.adminId;
       
-      console.log('Admin data:', adminData);
+//       console.log('Admin data:', adminData);
       
-      await loadAllData();
-      setupEventListeners();
+//       await loadAllData();
+//       setupEventListeners();
       
-    } catch (error) {
-      console.error('Initialization failed:', error);
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    }
-});
+//     } catch (error) {
+//       console.error('Initialization failed:', error);
+//       localStorage.removeItem('token');
+//       window.location.href = 'login.html';
+//     }
+// });
 
 // Load all dashboard data
 async function loadAllData() {
@@ -753,15 +753,17 @@ document.addEventListener('click', function(e) {
         const reportType = reportOption.dataset.type;
         const dateSelector = document.querySelector('.date-range-selector');
         
-        
-        document.querySelectorAll('.report-option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-        reportOption.classList.add('selected');
-        
-        
-        dateSelector.style.display = 'block';
-        dateSelector.dataset.reportType = reportType;
+        if (dateSelector) {
+            // Marks the selected report option
+            document.querySelectorAll('.report-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            reportOption.classList.add('selected');
+            
+            // Shows date selector and stores report type
+            dateSelector.style.display = 'block';
+            dateSelector.dataset.reportType = reportType;
+        }
     }
 });
 
@@ -770,9 +772,11 @@ document.addEventListener('click', function(e) {
     if (e.target.classList.contains('generate-btn')) {
         e.preventDefault();
         const dateSelector = document.querySelector('.date-range-selector');
+        if (!dateSelector) return;
+        
         const reportType = dateSelector.dataset.reportType;
-        const startDate = document.getElementById('start-date').value;
-        const endDate = document.getElementById('end-date').value;
+        const startDate = document.getElementById('start-date')?.value;
+        const endDate = document.getElementById('end-date')?.value;
         
         if (!reportType) {
             alert('Please select a report type first');
@@ -789,8 +793,11 @@ document.addEventListener('click', function(e) {
 });
 
 async function generateReport(type, startDate, endDate) {
+    const loadingIndicator = document.getElementById('loading-indicator');
     try {
-        document.getElementById('loading-indicator').style.display = 'flex';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'flex';
+        }
         
         const response = await fetch(`http://localhost:3000/admin/reports`, {
             method: 'POST',
@@ -806,18 +813,25 @@ async function generateReport(type, startDate, endDate) {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to generate report');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to generate report');
         }
         
         const reportData = await response.json();
         displayReport(reportData);
-        document.getElementById('reports-modal').style.display = 'none';
+        
+        const reportsModal = document.getElementById('reports-modal');
+        if (reportsModal) {
+            reportsModal.style.display = 'none';
+        }
         
     } catch (error) {
         console.error('Error generating report:', error);
         alert(`Failed to generate report: ${error.message}`);
     } finally {
-        document.getElementById('loading-indicator').style.display = 'none';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
     }
 }
 
@@ -828,8 +842,12 @@ function displayReport(data) {
 }
 
 function generatePDF(data) {
-    const { reportType, startDate, endDate, data: reportData } = data;
-    const doc = new jsPDF();
+    const doc = new window.jsPDF();
+    const { reportType, startDate, endDate, data: reportData } = data || {};
+    
+    if (!reportType || !startDate || !endDate || !reportData) {
+        throw new Error('Invalid report data structure');
+    }
     
     doc.setProperties({
         title: `${reportType} Recruitment Report`,
