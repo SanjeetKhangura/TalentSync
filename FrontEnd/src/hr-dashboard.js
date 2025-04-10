@@ -1,7 +1,7 @@
 // hr-dashboard.js
-
 const API_BASE_URL = 'http://localhost:3000';
 let currentUser = null;
+let unreadNotificationCount = 0;
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -62,6 +62,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         closeJobModal();
       }
     });
+
+    setupLogoutButton();
+    setupScreeningModal();
+
+    await updateNotificationBadge();
+  
+    setupNotificationModal();
+  
+    setInterval(updateNotificationBadge, 30000);
     
   } catch (error) {
     console.error('Initialization error:', error);
@@ -103,7 +112,6 @@ function updateUserProfileDisplay(userData) {
 async function loadHRData() {
   await loadJobPosts();
   await loadApplications();
-  await loadNotifications();
 }
 
 // Job Posts Functions
@@ -508,6 +516,7 @@ function renderApplicantsList(applications) {
   
 // View Application Details
 async function viewApplicationDetails(applicationId) {
+    console.log('Viewing application details for ID:', applicationId);
     try {
       const response = await fetch(`${API_BASE_URL}/hr/applications/${applicationId}`, {
         headers: {
@@ -562,17 +571,28 @@ function renderApplicationDetails(application) {
     
     // Add save status handler
     document.getElementById('save-status-btn').addEventListener('click', async () => {
-      const status = document.getElementById('status-select').value;
-      const appId = document.getElementById('save-status-btn').dataset.appId;
-      
-      try {
-        await updateApplicationStatus(appId, status);
-        closeApplicantPopup();
-        await loadApplications(); // Refresh the applications list
-      } catch (error) {
-        console.error('Error updating status:', error);
-        alert('Failed to update status');
-      }
+        const status = document.getElementById('status-select').value;
+        const appId = document.getElementById('save-status-btn').dataset.appId;
+        
+        try {
+            const result = await updateApplicationStatus(appId, status);
+            
+            showNotification({
+                type: 'success',
+                message: result.message || 'Status updated successfully!',
+                duration: 3000
+            });
+            
+            closeApplicantPopup();
+            await loadApplications(); // Refresh the applications list
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showNotification({
+                type: 'error',
+                message: error.message || 'Failed to update status',
+                duration: 5000
+            });
+        }
     });
     
     // Show popup
@@ -582,96 +602,28 @@ function renderApplicationDetails(application) {
   
 async function updateApplicationStatus(applicationId, status) {
     try {
-      const response = await fetch(`${API_BASE_URL}/hr/applications/${applicationId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          status: status,
-          changeStatus: `Status updated to ${status} by HR`
-        })
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update status');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating application status:', error);
-      throw error;
-    }
-}
+        const response = await fetch(`${API_BASE_URL}/hr/applications/${applicationId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                status: status,
+                changeStatus: `Status updated to ${status} by HR`
+            })
+        });
 
-// Notifications Functions
-async function loadNotifications() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/hr/notifications`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
         }
-      });
-      
-      if (!response.ok) throw new Error('Failed to load notifications');
-      
-      const notifications = await response.json();
-      renderNotifications(notifications);
+
+        return data;
     } catch (error) {
-      console.error('Error loading notifications:', error);
-      alert('Failed to load notifications');
-    }
-}
-  
-function renderNotifications(notifications) {
-    const notificationsContent = document.querySelector('.notifications-content');
-    notificationsContent.innerHTML = '';
-    
-    notifications.forEach(notification => {
-      const notifDiv = document.createElement('div');
-      notifDiv.className = 'notification';
-      notifDiv.innerHTML = `
-        <h3 class="notification-title">Notification</h3>
-        <p class="notification-description">${notification.Message}</p>
-        <p class="notification-date">${new Date(notification.SendDate).toLocaleString()}</p>
-        <div class="button-wrapper">
-          <button class="remove-button" data-notif-id="${notification.NotificationID}">X</button>
-        </div>
-      `;
-      
-      notificationsContent.appendChild(notifDiv);
-    });
-    
-    // Attach remove handlers
-    document.querySelectorAll('.remove-button').forEach(button => {
-      button.addEventListener('click', async (e) => {
-        const notifId = e.target.getAttribute('data-notif-id');
-        const success = await deleteNotification(notifId);
-        if (success) {
-          loadNotifications(); // Refresh the list
-        }
-      });
-    });
-}
-  
-async function deleteNotification(notificationId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/hr/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete notification');
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      alert('Failed to delete notification');
-      return false;
+        console.error('Error updating application status:', error);
+        throw error;
     }
 }
 
@@ -732,6 +684,344 @@ function showNotification({ type, message, duration }) {
     document.head.appendChild(style);
 }
 
+// AI SCREENING FUNCTIONS
+
+// Add these new functions
+function setupScreeningModal() {
+    const screeningBtn = document.createElement('a');
+    screeningBtn.href = '#';
+    screeningBtn.innerHTML = '<i class="fas fa-robot"></i> Screening';
+    screeningBtn.addEventListener('click', openScreeningModal);
+    
+    const iconWrapper = document.querySelector('.icon-wrapper');
+    iconWrapper.insertBefore(screeningBtn, document.querySelector('.profile-dropdown'));
+    
+    document.querySelector('.close-screening-modal').addEventListener('click', closeScreeningModal);
+    document.getElementById('run-screening-btn').addEventListener('click', runAIScreening);
+}
+  
+function openScreeningModal() {
+    populateJobDropdown();
+    document.getElementById('screening-modal').style.display = 'block';
+    document.getElementById('backdrop').style.display = 'block';
+}
+  
+function closeScreeningModal() {
+    document.getElementById('screening-modal').style.display = 'none';
+    document.getElementById('backdrop').style.display = 'none';
+}
+  
+async function populateJobDropdown() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/hr/jobs`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load jobs');
+      
+      const jobs = await response.json();
+      const dropdown = document.getElementById('screening-job');
+      dropdown.innerHTML = '<option value="">-- Select a Job --</option>';
+      
+      jobs.forEach(job => {
+        const option = document.createElement('option');
+        option.value = job.JobID;
+        option.textContent = job.JobName;
+        dropdown.appendChild(option);
+      });
+    } catch (error) {
+      console.error('Error populating job dropdown:', error);
+      showNotification({
+        type: 'error',
+        message: 'Failed to load jobs for screening',
+        duration: 5000
+      });
+    }
+}
+  
+async function runAIScreening() {
+    const jobId = document.getElementById('screening-job').value;
+    const educationChecked = document.querySelector('input[name="education"]').checked;
+    const experienceChecked = document.querySelector('input[name="experience"]').checked;
+    const keywordsChecked = document.querySelector('input[name="keywords"]').checked;
+    
+    if (!jobId) {
+      showNotification({
+        type: 'error',
+        message: 'Please select a job to screen',
+        duration: 3000
+      });
+      return;
+    }
+    
+    try {
+      showLoading(true); // Show loading overlay
+      
+      const response = await fetch(`${API_BASE_URL}/hr/screening`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          jobId,
+          criteria: {
+            education: educationChecked,
+            experience: experienceChecked,
+            keywords: keywordsChecked
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Screening failed');
+      }
+      
+      const results = await response.json();
+      renderScreenedApplicants(results);
+      closeScreeningModal();
+      showNotification({
+        type: 'success',
+        message: `Screening completed: ${results.length} applicants passed`,
+        duration: 5000
+      });
+    } catch (error) {
+      console.error('Error running AI screening:', error);
+      showNotification({
+        type: 'error',
+        message: error.message || 'Failed to run screening',
+        duration: 5000
+      });
+    } finally {
+      showLoading(false); // Hide loading overlay
+    }
+}
+  
+function renderScreenedApplicants(applications) {
+    const container = document.querySelector('.screened-content');
+    container.innerHTML = '';
+    
+    if (applications.length === 0) {
+      container.innerHTML = '<p class="no-data">No screened applicants found</p>';
+      return;
+    }
+    
+    applications.forEach(app => {
+      const appDiv = document.createElement('div');
+      appDiv.className = 'applicant-card screened-applicant';
+      appDiv.innerHTML = `
+        <div class="applicant-header">
+          <i class="fas fa-user-circle"></i>
+          <h3>${app.ApplicantName}</h3>
+        </div>
+        <p><strong>Job:</strong> ${app.JobName}</p>
+        <p><strong>Status:</strong> ${app.Status}</p>
+        <p><strong>Screened On:</strong> ${new Date().toLocaleDateString()}</p>
+        <div class="button-wrapper">
+          <button class="view-details" data-app-id="${app.ApplicationID}">
+            <i class="fas fa-eye"></i> View Details
+          </button>
+        </div>
+      `;
+      container.appendChild(appDiv);
+      
+      // Add click handler for view details
+      appDiv.querySelector('.view-details').addEventListener('click', (e) => {
+        e.stopPropagation();
+        viewApplicationDetails(app.ApplicationID);
+      });
+    });
+}
+
+// Notification Functions
+// Add notification badge to mail icon
+async function updateNotificationBadge() {
+    try {
+      const response = await fetch('http://localhost:3000/notifications/unread-count', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to get unread count');
+      
+      const data = await response.json();
+      unreadNotificationCount = data.count;
+      
+      const mailIcon = document.querySelector('.icon-wrapper a[href="#"] i.fa-envelope');
+      if (mailIcon) {
+        const badge = mailIcon.nextElementSibling || document.createElement('span');
+        if (data.count > 0) {
+          badge.className = 'notification-badge';
+          badge.textContent = data.count > 9 ? '9+' : data.count;
+          if (!mailIcon.nextElementSibling) {
+            mailIcon.parentNode.insertBefore(badge, mailIcon.nextSibling);
+          }
+        } else if (badge.classList.contains('notification-badge')) {
+          badge.remove();
+        }
+      }
+    } catch (error) {
+      console.error('Error updating notification badge:', error);
+    }
+  }
+  
+// Set up notification modal
+function setupNotificationModal() {
+    const mailLink = document.querySelector('.icon-wrapper a[href="#"] i.fa-envelope')?.parentNode;
+    if (!mailLink) return;
+    
+    mailLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      openNotificationModal();
+    });
+    
+    // Create modal HTML with proper structure
+    const modalHTML = `
+      <div id="notification-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <h2>Notifications</h2>
+          <div class="modal-actions">
+            <button class="send-message-btn">Send Message to Admin</button>
+          </div>
+          <div class="notifications-list">
+            <!-- Notifications will be loaded here -->
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('notification-modal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Close modal handler
+    const closeButton = document.querySelector('#notification-modal .close-modal');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        document.getElementById('notification-modal').style.display = 'none';
+      });
+    }
+    
+    // Send message handler
+    const sendButton = document.querySelector('#notification-modal .send-message-btn');
+    if (sendButton) {
+      sendButton.addEventListener('click', () => {
+        sendMessageToAdmin();
+      });
+    }
+    
+    // Close when clicking outside modal content
+    document.getElementById('notification-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('notification-modal')) {
+        document.getElementById('notification-modal').style.display = 'none';
+      }
+    });
+}
+  
+// Open notification modal
+async function openNotificationModal() {
+    const modal = document.getElementById('notification-modal');
+    if (!modal) return;
+    
+    try {
+      const response = await fetch('http://localhost:3000/notifications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load notifications');
+      
+      const notifications = await response.json();
+      const container = modal.querySelector('.notifications-list');
+      container.innerHTML = '';
+      
+      if (notifications.length === 0) {
+        container.innerHTML = '<p class="no-notifications">No notifications found</p>';
+      } else {
+        notifications.forEach(notification => {
+          const notificationElement = document.createElement('div');
+          notificationElement.className = `notification ${notification.IsRead ? '' : 'unread'}`;
+          notificationElement.dataset.id = notification.NotificationID;
+          notificationElement.innerHTML = `
+            <div class="notification-header">
+              <h3 class="notification-title">${notification.FromUserName || 'System'}</h3>
+              <span class="notification-date">${new Date(notification.SendDate).toLocaleString()}</span>
+            </div>
+            <p class="notification-message">${notification.Message}</p>
+          `;
+          container.appendChild(notificationElement);
+        });
+      }
+      
+      modal.style.display = 'block';
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      const modal = document.getElementById('notification-modal');
+      if (modal) {
+        modal.querySelector('.notifications-list').innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        modal.style.display = 'block';
+      }
+    }
+}
+
+//  Send message to admin function
+async function sendMessageToAdmin() {
+    const message = prompt('Enter your message to the admin:');
+    if (!message) return;
+    
+    try {
+      const response = await fetch('http://localhost:3000/hr/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          message: message
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to send message');
+      
+      showNotification({
+        type: 'success',
+        message: 'Message sent to admin successfully!',
+        duration: 3000
+      });
+      
+      // Refresh notifications
+      await openNotificationModal();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      showNotification({
+        type: 'error',
+        message: 'Failed to send message to admin',
+        duration: 5000
+      });
+    }
+}
+  
+async function markNotificationAsRead(notificationId) {
+    try {
+      await fetch(`http://localhost:3000/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+}
+
 //helper function to convert base64 to blob
 function base64ToBlob(base64, mimeType) {
     const byteCharacters = atob(base64);
@@ -755,3 +1045,30 @@ function closeApplicantPopup() {
     }
     iframe.src = '';
 }
+
+function showLoading(show) {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (show) {
+      loadingOverlay.style.display = 'flex';
+    } else {
+      loadingOverlay.style.display = 'none';
+    }
+  }
+
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+      });
+    }
+  }
+  
+  function logout() {
+    // Clear the token from local storage
+    localStorage.removeItem('token');
+    
+    // Redirect to login page
+    window.location.href = 'login.html';
+  }

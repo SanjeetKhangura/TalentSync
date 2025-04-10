@@ -329,30 +329,120 @@ async function loadHRStaff() {
 
 // Notifications functions
 async function loadNotifications() {
-  const response = await fetch('http://localhost:3000/admin/notifications', {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    try {
+      const response = await fetch('http://localhost:3000/notifications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load notifications');
+      
+      const notifications = await response.json();
+      const container = document.querySelector('.notifications-content');
+      container.innerHTML = '';
+      
+      if (notifications.length === 0) {
+        container.innerHTML = '<p class="no-notifications">No notifications found</p>';
+        return;
+      }
+  
+      notifications.forEach(notification => {
+        const notificationElement = document.createElement('div');
+        notificationElement.className = `notification ${notification.IsRead ? '' : 'unread'}`;
+        notificationElement.dataset.id = notification.NotificationID;
+        notificationElement.innerHTML = `
+          <div class="notification-header">
+            <h3 class="notification-title">${notification.FromUserName || 'System'}</h3>
+            <span class="notification-date">${new Date(notification.SendDate).toLocaleString()}</span>
+          </div>
+          <p class="notification-message">${notification.Message}</p>
+          ${notification.JobName ? `<p class="notification-job">Job: ${notification.JobName}</p>` : ''}
+          <div class="notification-actions">
+            <button class="reply-button">Reply</button>
+            <button class="remove-button">X</button>
+          </div>
+          <div class="reply-form" style="display: none;">
+            <textarea class="reply-message" placeholder="Type your reply..."></textarea>
+            <button class="send-reply">Send</button>
+          </div>
+        `;
+        container.appendChild(notificationElement);
+        
+        // Mark as read when clicked
+        notificationElement.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('remove-button') && 
+              !e.target.classList.contains('reply-button') &&
+              !e.target.classList.contains('send-reply')) {
+            markNotificationAsRead(notification.NotificationID);
+            notificationElement.classList.remove('unread');
+          }
+        });
+      });
+  
+      // Add event listeners for reply buttons
+      document.querySelectorAll('.reply-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const notificationElement = e.target.closest('.notification');
+          const replyForm = notificationElement.querySelector('.reply-form');
+          replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+        });
+      });
+  
+      // Add event listeners for send reply buttons
+      document.querySelectorAll('.send-reply').forEach(button => {
+        button.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const notificationElement = e.target.closest('.notification');
+          const notificationId = notificationElement.dataset.id;
+          const message = notificationElement.querySelector('.reply-message').value;
+          
+          if (!message) {
+            alert('Please enter a reply message');
+            return;
+          }
+          
+          try {
+            const response = await fetch(`http://localhost:3000/notifications/${notificationId}/reply`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ message })
+            });
+            
+            if (!response.ok) throw new Error('Failed to send reply');
+            
+            alert('Reply sent successfully');
+            notificationElement.querySelector('.reply-form').style.display = 'none';
+            notificationElement.querySelector('.reply-message').value = '';
+          } catch (error) {
+            console.error('Error sending reply:', error);
+            alert('Failed to send reply');
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      const container = document.querySelector('.notifications-content');
+      container.innerHTML = `<div class="error">Error: ${error.message}</div>`;
     }
-  });
+}
   
-  const notifications = await response.json();
-  const container = document.querySelector('.notifications-content');
-  container.innerHTML = '';
-  
-  notifications.forEach(notification => {
-    const notificationElement = document.createElement('div');
-    notificationElement.className = 'notification';
-    notificationElement.dataset.id = notification.NotificationID;
-    notificationElement.innerHTML = `
-      <h3 class="notification-title">To: ${notification.UserName}</h3>
-      <p class="notification-description">${notification.Message.substring(0, 50)}${notification.Message.length > 50 ? '...' : ''}</p>
-      <p class="notification-date">${new Date(notification.SendDate).toLocaleString()}</p>
-      <div class="button-wrapper">
-        <button class="remove-button">X</button>
-      </div>
-    `;
-    container.appendChild(notificationElement);
-  });
+async function markNotificationAsRead(notificationId) {
+    try {
+      await fetch(`http://localhost:3000/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
 }
 
 // Setup all event listeners
@@ -382,12 +472,14 @@ function setupEventListeners() {
         // Close button
         if (e.target.classList.contains('close-modal')) {
             const modal = e.target.closest('.modal-overlay');
-            if (modal) modal.remove();
+            if (modal) {
+                modal.style.display = 'none'; // Hide instead of remove
+            }
         }
         
         // Click outside content
         if (e.target.classList.contains('modal-overlay')) {
-            e.target.remove();
+            e.target.style.display = 'none'; // Hide instead of remove
         }
     });
 
@@ -900,8 +992,12 @@ function showReportsModal(e) {
 document.addEventListener('click', function(e) {
     const modal = document.getElementById('reports-modal');
     
-    if (e.target.classList.contains('close-modal') || 
-        (modal && e.target === modal)) {
+    // Check if click is on close button or modal backdrop
+    if ((e.target.classList.contains('close-modal'))) {
+        // Close button clicked
+        if (modal) modal.style.display = 'none';
+    } else if (modal && e.target === modal) {
+        // Clicked on modal backdrop
         modal.style.display = 'none';
     }
 });

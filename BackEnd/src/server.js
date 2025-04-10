@@ -2101,44 +2101,54 @@ app.put('/hr/applications/:id/status', authenticateToken, async (req, res) => {
   const { status, changeStatus } = req.body;
 
   try {
-    // Verify HR has permission to update this application
-    const [application] = await pool.query(`
-      SELECT a.ApplicationID 
-      FROM applications a
-      JOIN jobs j ON a.JobID = j.JobID
-      WHERE a.ApplicationID = ? AND j.PostedBy = ?
-    `, [req.params.id, req.user.userId]);
+      // Verify HR has permission to update this application
+      const [application] = await pool.query(`
+          SELECT a.ApplicationID 
+          FROM applications a
+          JOIN jobs j ON a.JobID = j.JobID
+          JOIN hr_staff hs ON j.PostedBy = hs.HRID
+          WHERE a.ApplicationID = ? AND hs.UserID = ?
+      `, [req.params.id, req.user.userId]);
 
-    if (!application.length) {
-      return res.status(404).json({ message: 'Application not found or unauthorized' });
-    }
+      if (!application.length) {
+          return res.status(404).json({ message: 'Application not found or unauthorized' });
+      }
 
-    await pool.query(
-      'UPDATE applications SET Status = ?, ChangeStatus = ? WHERE ApplicationID = ?',
-      [status, changeStatus || `Status changed to ${status}`, req.params.id]
-    );
-
-    // Create notification for applicant
-    const [applicant] = await pool.query(`
-      SELECT u.UserID 
-      FROM applications a
-      JOIN applicant ap ON a.ApplicantID = ap.ApplicantID
-      JOIN users u ON ap.UserID = u.UserID
-      WHERE a.ApplicationID = ?
-    `, [req.params.id]);
-
-    if (applicant.length) {
+      // Updated query matching your table structure
       await pool.query(
-        `INSERT INTO notifications (UserID, Message, SendDate)
-         VALUES (?, ?, NOW())`,
-        [applicant[0].UserID, `Your application status has been updated to: ${status}`]
+          'UPDATE applications SET Status = ?, ChangeStatus = ? WHERE ApplicationID = ?',
+          [status, changeStatus || `Status changed to ${status}`, req.params.id]
       );
-    }
 
-    res.json({ success: true, message: 'Application status updated' });
+      // Create notification for applicant
+      const [applicant] = await pool.query(`
+          SELECT u.UserID 
+          FROM applications a
+          JOIN applicant ap ON a.ApplicantID = ap.ApplicantID
+          JOIN users u ON ap.UserID = u.UserID
+          WHERE a.ApplicationID = ?
+      `, [req.params.id]);
+
+      if (applicant.length) {
+          await pool.query(
+              `INSERT INTO notifications (UserID, Message, SendDate)
+              VALUES (?, ?, NOW())`,
+              [applicant[0].UserID, `Your application status has been updated to: ${status}`]
+          );
+      }
+
+      res.json({ 
+          success: true, 
+          message: 'Application status updated',
+          updatedStatus: status
+      });
   } catch (error) {
-    logger.error('Error updating application status:', error);
-    res.status(500).json({ message: 'Error updating application status' });
+      logger.error('Error updating application status:', error);
+      res.status(500).json({ 
+          success: false,
+          message: 'Error updating application status',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
   }
 });
 
@@ -2251,6 +2261,296 @@ app.delete('/hr/notifications/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     logger.error('Error deleting notification:', error);
     res.status(500).json({ message: 'Error deleting notification' });
+  }
+});
+
+// Screening applications using AI
+app.post('/hr/screening', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'HR') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { jobId, criteria } = req.body;
+
+  try {
+    // Verify HR owns this job and get job requirements
+    const [job] = await pool.query(
+      `SELECT j.*, c.Name as CategoryName 
+       FROM jobs j
+       LEFT JOIN categories c ON j.CategoryID = c.CategoryID
+       WHERE j.JobID = ? AND j.PostedBy = ?`,
+      [jobId, req.user.hrId]
+    );
+
+    if (!job.length) {
+      return res.status(404).json({ message: 'Job not found or unauthorized' });
+    }
+
+    // Get all applications for this job with applicant details
+    const [applications] = await pool.query(`
+      SELECT 
+        a.*, 
+        u.Name as ApplicantName, 
+        u.Email,
+        u.Phone,
+        j.JobName,
+        ap.Education,
+        ap.WorkExperience,
+        we.JobTitle as PreviousJobTitle,
+        we.EmployerName,
+        we.TimePeriod,
+        we.JobDescription as WorkDescription
+      FROM applications a
+      JOIN applicant ap ON a.ApplicantID = ap.ApplicantID
+      JOIN users u ON ap.UserID = u.UserID
+      JOIN jobs j ON a.JobID = j.JobID
+      LEFT JOIN work_experience we ON ap.ApplicantID = we.ApplicantID
+      WHERE a.JobID = ?
+    `, [jobId]);
+
+    // Enhanced screening logic
+    const screenedApplications = applications.filter(app => {
+      let passes = true;
+      const jobReq = job[0];
+      
+      // 1. Education Matching
+      if (criteria.education && jobReq.MinEducation) {
+        passes = passes && matchEducation(app.Education, jobReq.MinEducation);
+      }
+      
+      // 2. Experience Matching
+      if (criteria.experience && jobReq.MinExperience) {
+        passes = passes && matchExperience(app.WorkExperience, jobReq.MinExperience);
+      }
+      
+      // 3. Keyword Matching
+      if (criteria.keywords && jobReq.Description) {
+        passes = passes && matchKeywords(app.Resume, jobReq.Description);
+      }
+      
+      return passes;
+    });
+
+    // Update screened applications in database
+    for (const app of screenedApplications) {
+      await pool.query(
+        'INSERT INTO ai_screening (ApplicationID, Result) VALUES (?, "Next Step") ' +
+        'ON DUPLICATE KEY UPDATE Result = "Next Step"',
+        [app.ApplicationID]
+      );
+      
+      await pool.query(
+        'UPDATE applications SET Status = "Next Step" WHERE ApplicationID = ?',
+        [app.ApplicationID]
+      );
+    }
+
+    res.json(screenedApplications);
+  } catch (error) {
+    logger.error('Error running AI screening:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error running screening',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Helper functions for matching criteria
+function matchEducation(applicantEducation, jobEducation) {
+  if (!applicantEducation) return false;
+  
+  // Create a hierarchy of education levels
+  const educationHierarchy = {
+    'high school': 1,
+    'associate': 2,
+    'bachelor': 3,
+    'master': 4,
+    'phd': 5
+  };
+  
+  // Find the highest level mentioned in job requirements
+  const jobLevel = Object.keys(educationHierarchy)
+    .filter(level => jobEducation.toLowerCase().includes(level))
+    .map(level => educationHierarchy[level])
+    .sort((a, b) => b - a)[0] || 0;
+  
+  // Find the highest level in applicant's education
+  const applicantLevel = Object.keys(educationHierarchy)
+    .filter(level => applicantEducation.toLowerCase().includes(level))
+    .map(level => educationHierarchy[level])
+    .sort((a, b) => b - a)[0] || 0;
+  
+  return applicantLevel >= jobLevel;
+}
+
+function matchExperience(workExperience, minYears) {
+  if (!workExperience) return false;
+  
+  // Extract years of experience from work history
+  const experiencePattern = /(\d+)\s*(year|yr|years)/gi;
+  let totalYears = 0;
+  let match;
+  
+  while ((match = experiencePattern.exec(workExperience)) !== null) {
+    totalYears += parseInt(match[1]);
+  }
+  
+  // Also check work_experience table if available
+  if (this.WorkDescription) {
+    const descMatch = this.WorkDescription.match(experiencePattern);
+    if (descMatch) {
+      totalYears += parseInt(descMatch[1]);
+    }
+  }
+  
+  return totalYears >= minYears;
+}
+
+function matchKeywords(resume, jobDescription) {
+  if (!resume || !jobDescription) return false;
+  
+  try {
+    const resumeText = atob(resume);
+    const jobKeywords = extractKeywords(jobDescription);
+    
+    if (jobKeywords.length === 0) return true; // No keywords to match
+    
+    const matchedKeywords = jobKeywords.filter(keyword =>
+      resumeText.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    // Require at least 50% of keywords to match
+    return (matchedKeywords.length / jobKeywords.length) >= 0.5;
+  } catch (e) {
+    console.error('Error processing resume:', e);
+    return false;
+  }
+}
+
+function extractKeywords(text) {
+  // Simple keyword extraction - could be enhanced with NLP
+  const words = text.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const commonWords = new Set(['with', 'this', 'that', 'have', 'will', 'your']);
+  
+  return [...new Set(words)]
+    .filter(word => word.length > 3 && !commonWords.has(word))
+    .slice(0, 20); // Limit to top 20 keywords
+}
+
+// HR sends notification to admin
+app.post('/hr/notifications', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'HR') return res.status(403).json({ message: 'Unauthorized' });
+
+  const { message, jobId } = req.body;
+  
+  try {
+    // Get all admin users
+    const [admins] = await pool.query(`
+      SELECT u.UserID 
+      FROM users u
+      JOIN admin a ON u.UserID = a.UserID
+      WHERE u.Role = 'Admin'
+    `);
+
+    if (!admins.length) {
+      return res.status(404).json({ message: 'No admin users found' });
+    }
+
+    // Create notifications for all admins
+    const insertPromises = admins.map(admin => 
+      pool.query(
+        `INSERT INTO notifications (UserID, Message, SendDate, FromUserID, JobID, IsRead)
+         VALUES (?, ?, NOW(), ?, ?, 0)`,
+        [admin.UserID, message, req.user.userId, jobId]
+      )
+    );
+
+    await Promise.all(insertPromises);
+    
+    res.json({ success: true, message: 'Notification sent to admins' });
+  } catch (error) {
+    logger.error('Error sending notification:', error);
+    res.status(500).json({ message: 'Error sending notification' });
+  }
+});
+
+// Get unread notification count
+app.get('/notifications/unread-count', authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.query(
+      'SELECT COUNT(*) as count FROM notifications WHERE UserID = ? AND IsRead = 0',
+      [req.user.userId]
+    );
+    
+    res.json({ count: result[0].count });
+  } catch (error) {
+    logger.error('Error getting unread count:', error);
+    res.status(500).json({ message: 'Error getting unread count' });
+  }
+});
+
+// Get notifications for current user
+app.get('/notifications', authenticateToken, async (req, res) => {
+  try {
+    const [notifications] = await pool.query(`
+      SELECT 
+        n.*,
+        u.Name as FromUserName,
+        j.JobName
+      FROM notifications n
+      LEFT JOIN users u ON n.FromUserID = u.UserID
+      LEFT JOIN jobs j ON n.JobID = j.JobID
+      WHERE n.UserID = ?
+      ORDER BY n.SendDate DESC
+    `, [req.user.userId]);
+    
+    res.json(notifications);
+  } catch (error) {
+    logger.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Error fetching notifications' });
+  }
+});
+
+// Mark notification as read
+app.put('/notifications/:id/read', authenticateToken, async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE notifications SET IsRead = 1 WHERE NotificationID = ? AND UserID = ?',
+      [req.params.id, req.user.userId]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error marking notification as read:', error);
+    res.status(500).json({ message: 'Error marking notification as read' });
+  }
+});
+
+// Reply to notification
+app.post('/notifications/:id/reply', authenticateToken, async (req, res) => {
+  const { message } = req.body;
+  
+  try {
+    // Get original notification
+    const [notification] = await pool.query(
+      'SELECT * FROM notifications WHERE NotificationID = ?',
+      [req.params.id]
+    );
+
+    if (!notification.length) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    // Create reply notification
+    await pool.query(
+      `INSERT INTO notifications (UserID, Message, SendDate, FromUserID, JobID, IsRead, IsReply)
+       VALUES (?, ?, NOW(), ?, ?, 0, 1)`,
+      [notification[0].FromUserID, message, req.user.userId, notification[0].JobID]
+    );
+    
+    res.json({ success: true, message: 'Reply sent successfully' });
+  } catch (error) {
+    logger.error('Error replying to notification:', error);
+    res.status(500).json({ message: 'Error replying to notification' });
   }
 });
 

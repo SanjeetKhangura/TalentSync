@@ -94,15 +94,15 @@
     <!-- Backdrop -->
     <div class="backdrop" id="backdrop" style="display:none;"></div>
 
-    <!-- Notifications quadrant -->
-    <section class="notifications-container">
-      <h2>Notifications</h2>
-      <div class="search-bar">
-        <input type="text" placeholder="Search Notifications..." id="notification-search">
-      </div>
-      <div class="notifications-content">
-        <!-- Notifications will be inserted here by JavaScript -->
-      </div>
+    <!-- Screened quadrant -->
+    <section class="screened-container">
+        <h2>Screened Applicants</h2>
+        <div class="search-bar">
+          <input type="text" placeholder="Search Screened Applicants..." id="screened-search">
+        </div>
+        <div class="screened-content">
+          <!-- Screened applicants will be inserted here by JavaScript -->
+        </div>
     </section>
   </main>
 
@@ -154,6 +154,32 @@
             <button type="button" id="delete-job-btn" class="delete-btn">Delete Job</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!--Screening Modal-->
+  <div id="screening-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-screening-modal">&times;</span>
+      <h2>AI Resume Screening</h2>
+      <div class="screening-form">
+        <div class="form-group">
+          <label for="screening-job">Select Job:</label>
+          <select id="screening-job" required>
+            <option value="">-- Select a Job --</option>
+            <!-- Jobs will be populated by JavaScript -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Screening Criteria:</label>
+          <div class="criteria-options">
+            <label><input type="checkbox" name="education" checked> Match Education Requirements</label>
+            <label><input type="checkbox" name="experience" checked> Match Experience Requirements</label>
+            <label><input type="checkbox" name="keywords" checked> Match Keywords</label>
+          </div>
+        </div>
+        <button id="run-screening-btn">Run Screening</button>
+      </div>
     </div>
   </div>
 
