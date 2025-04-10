@@ -1039,21 +1039,6 @@ app.post('/admin/jobs', authenticateToken, async (req, res) => {
   }
 });
 
-
-app.delete('/admin/jobs/:id', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'Admin') {
-    return res.status(403).json({ message: 'Unauthorized' });
-  }
-
-  try {
-    await pool.query('DELETE FROM jobs WHERE JobID = ?', [req.params.id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting job:', error);
-    res.status(500).json({ message: 'Error deleting job' });
-  }
-});
-
 // Category Management
 app.get('/admin/categories', authenticateToken, async (req, res) => {
   if (req.user.role !== 'Admin') {
@@ -1246,14 +1231,37 @@ app.post('/admin/notifications', authenticateToken, async (req, res) => {
 });
 
 app.delete('/admin/notifications/:id', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'Admin') return res.status(403).json({ message: 'Unauthorized' });
+  if (req.user.role !== 'Admin') {
+      return res.status(403).json({ 
+          success: false,
+          message: 'Unauthorized' 
+      });
+  }
 
   try {
-    await pool.query('DELETE FROM notifications WHERE NotificationID = ?', [req.params.id]);
-    res.json({ success: true });
+      const [result] = await pool.query(
+          'DELETE FROM notifications WHERE NotificationID = ?',
+          [req.params.id]
+      );
+
+      if (result.affectedRows === 0) {
+          return res.status(404).json({
+              success: false,
+              message: 'Notification not found'
+          });
+      }
+
+      res.json({ 
+          success: true,
+          message: 'Notification deleted successfully'
+      });
   } catch (error) {
-    logger.error('Error deleting notification:', error);
-    res.status(500).json({ message: 'Error deleting notification' });
+      console.error('Error deleting notification:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Error deleting notification',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
   }
 });
 
@@ -1731,7 +1739,7 @@ app.post('/hr/jobs', authenticateToken, async (req, res) => {
   if (req.user.role !== 'HR') return res.status(403).json({ message: 'Unauthorized' });
 
   try {
-    // First, get the HRID for the current user
+    // get the HRID for the current user
     const [hrStaff] = await pool.query(
       'SELECT HRID FROM hr_staff WHERE UserID = ?',
       [req.user.userId]
@@ -1946,63 +1954,68 @@ app.delete('/hr/jobs/:id', authenticateToken, async (req, res) => {
 // Delete job post
 app.delete('/admin/jobs/:id', authenticateToken, async (req, res) => {
   if (req.user.role !== 'Admin') {
-      return res.status(403).json({ 
-          success: false,
-          message: 'Unauthorized' 
-      });
+    return res.status(403).json({ 
+      success: false,
+      message: 'Unauthorized' 
+    });
   }
 
   const connection = await pool.getConnection();
   try {
-      await connection.beginTransaction();
+    await connection.beginTransaction();
 
-      // 1. First delete all applications for this job
-      const [deleteAppsResult] = await connection.query(
-          'DELETE FROM applications WHERE JobID = ?',
-          [req.params.id]
-      );
+    // 1. First delete all AI screening records for applications of this job
+    await connection.query(`
+      DELETE ai FROM ai_screening ai
+      JOIN applications a ON ai.ApplicationID = a.ApplicationID
+      WHERE a.JobID = ?
+    `, [req.params.id]);
 
-      console.log(`Deleted ${deleteAppsResult.affectedRows} applications`);
+    // 2. Then delete all applications for this job
+    const [deleteAppsResult] = await connection.query(
+      'DELETE FROM applications WHERE JobID = ?',
+      [req.params.id]
+    );
 
-      // 2. Then delete the job
-      const [deleteJobResult] = await connection.query(
-          'DELETE FROM jobs WHERE JobID = ?',
-          [req.params.id]
-      );
+    // 3. Finally delete the job
+    const [deleteJobResult] = await connection.query(
+      'DELETE FROM jobs WHERE JobID = ?',
+      [req.params.id]
+    );
 
-      if (deleteJobResult.affectedRows === 0) {
-          await connection.rollback();
-          return res.status(404).json({ 
-              success: false,
-              message: 'Job not found' 
-          });
-      }
-
-      await connection.commit();
-      res.json({ 
-          success: true,
-          message: `Job and ${deleteAppsResult.affectedRows} associated application(s) deleted successfully`
-      });
-  } catch (error) {
+    if (deleteJobResult.affectedRows === 0) {
       await connection.rollback();
-      console.error('Error deleting job:', error);
-      
-      let errorMessage = 'Error deleting job';
-      if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-          errorMessage = 'Cannot delete job because it has associated applications.';
-      }
-
-      res.status(500).json({ 
-          success: false,
-          message: errorMessage,
-          error: process.env.NODE_ENV === 'development' ? {
-              code: error.code,
-              message: error.message,
-              sql: error.sql
-          } : undefined
+      return res.status(404).json({ 
+        success: false,
+        message: 'Job not found' 
       });
+    }
+
+    await connection.commit();
+    res.json({ 
+      success: true,
+      message: `Job and ${deleteAppsResult.affectedRows} associated application(s) deleted successfully`
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error deleting job:', error);
+    
+    let errorMessage = 'Error deleting job';
+    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+      errorMessage = 'Cannot delete job because it has associated records.';
+    }
+
+    res.status(500).json({ 
+      success: false,
+      message: errorMessage,
+      error: process.env.NODE_ENV === 'development' ? {
+        code: error.code,
+        message: error.message,
+        sql: error.sql
+      } : undefined
+    });
   } finally {
-      connection.release();
+    connection.release();
   }
 });
 

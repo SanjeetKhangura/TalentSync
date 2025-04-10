@@ -579,11 +579,6 @@ async function createCategory() {
 
         const result = await response.json();
 
-        showNotification({
-        type: 'success',
-        message: result.message || 'Category Created successfully',
-        duration: 5000
-        } );
     } catch (error) {
         console.error('Error creating category:', error);
         alert(`Failed to create category: ${error.message}`);
@@ -626,19 +621,9 @@ async function deleteCategory(categoryId, categoryName) {
         await loadCategories();
         await loadJobs();
         
-        showNotification({
-            type: 'success',
-            message: result.message || `Category deleted (${result.jobsAffected || 0} jobs unassigned)`,
-            duration: 5000
-        });
     } catch (error) {
         console.error('Delete category error:', error);
         
-        showNotification({
-            type: 'error',
-            message: error.message || 'Failed to delete category',
-            duration: 8000
-        });
     }
 }
 
@@ -684,11 +669,6 @@ async function createHRStaff() {
 
         const result = await response.json();
 
-        showNotification({
-        type: 'success',
-        message: result.message || 'HR Staff Created successfully',
-        duration: 5000
-        } );
     } catch (error) {
         console.error('Error creating HR staff:', error);
         alert(`Failed to create HR staff: ${error.message}`);
@@ -848,22 +828,11 @@ async function deleteJob(jobId, jobName) {
         // Refresh the jobs list
         await loadJobs();
         
-        // Show success message
-        showNotification({
-            type: 'success',
-            message: result.message || 'Job deleted successfully',
-            duration: 5000
-        });
     } catch (error) {
         console.error('Delete job error:', error);
         
-        showNotification({
-            type: 'error',
-            message: error.message || 'Failed to delete job',
-            duration: 8000
-        });
 
-        // Optional: Show more details in development
+        // Show more details in development
         if (process.env.NODE_ENV === 'development' && error.info) {
             console.error('Error details:', error.info);
         }
@@ -892,18 +861,8 @@ async function updateCategory(categoryId, newName) {
 
       const result = await response.json();
 
-      showNotification({
-        type: 'success',
-        message: result.message || 'Catregory Updated successfully',
-        duration: 5000
-    });
     } catch (error) {
 
-        showNotification({
-            type: 'error',
-            message: error.message || 'Failed to Update Category',
-            duration: 8000
-        });
       console.error('Error updating category:', error);
       alert(`Failed to update category: ${error.message}`);
     }
@@ -931,42 +890,33 @@ async function deleteHRStaff(memberId) {
 
       const result = await response.json();
 
-      showNotification({
-        type: 'success',
-        message: result.message || 'HR Staff deleted successfully',
-        duration: 5000
-      });
     } catch (error) {
-        showNotification({
-            type: 'error',
-            message: error.message || 'Failed to delete HR Account',
-            duration: 8000
-        });
       console.error('Error deleting HR staff:', error);
       alert(`Failed to delete HR staff: ${error.message}`);
     }
 }
 
 async function deleteNotification(notificationId) {
-  if (!confirm('Are you sure you want to delete this notification?')) return;
-  
-  try {
-    const response = await fetch(`/admin/notifications/${notificationId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+    if (!confirm('Are you sure you want to delete this notification?')) return;
     
-    if (response.ok) {
-      await loadNotifications();
-    } else {
-      throw new Error('Failed to delete notification');
+    try {
+        const response = await fetch(`http://localhost:3000/admin/notifications/${notificationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete notification');
+        }
+
+        await loadNotifications();
+    } catch (error) {
+        console.error('Error deleting notification:', error);
     }
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    alert('Failed to delete notification');
-  }
 }
 
 function showReportsModal(e) {

@@ -117,34 +117,68 @@ async function loadHRData() {
 // Job Posts Functions
 async function loadJobPosts() {
     try {
-      console.log("Fetching jobs..."); // Debug log
-      const response = await fetch(`${API_BASE_URL}/hr/jobs`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        console.log("Fetching jobs...");
+        const response = await fetch(`${API_BASE_URL}/hr/jobs`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response:", errorText);
+            
+            // Check for specific HTTP status codes
+            if (response.status === 401) {
+                throw new Error('Session expired. Please login again.');
+            } else if (response.status === 403) {
+                throw new Error('You do not have permission to view jobs.');
+            } else {
+                throw new Error('Failed to load jobs');
+            }
         }
-      });
-      
-      console.log("Response status:", response.status); // Debug log
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText); // Debug log
-        throw new Error('Failed to load jobs');
-      }
-      
-      const jobs = await response.json();
-      console.log("Jobs received:", jobs); // Debug log
-      renderJobPosts(jobs);
-      return jobs;
+        
+        const jobs = await response.json();
+        console.log("Jobs received:", jobs);
+        
+        if (!Array.isArray(jobs)) {
+            throw new Error('Invalid jobs data received');
+        }
+        
+        renderJobPosts(jobs);
+        return jobs;
     } catch (error) {
-      console.error('Error loading jobs:', error);
-      alert('Failed to load job posts');
+        console.error('Error loading jobs:', error);
+        
+        // Show user-friendly error message
+        const errorMessage = error.message || 'Failed to load job posts';
+        showNotification({
+            type: 'error',
+            message: errorMessage,
+            duration: 5000
+        });
+        
+        // If unauthorized, redirect to login
+        if (error.message.includes('Session expired') || error.message.includes('permission')) {
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        }
+        
+        return []; // Return empty array to prevent further errors
     }
 }
   
 function renderJobPosts(jobs) {
-    const jobPostsContent = document.querySelector('.job-posts-content');
-    jobPostsContent.innerHTML = '';
+    const container = document.querySelector('.job-posts-content');
+    if (!container) {
+        console.error('Job posts container not found');
+        return;
+    }
+    
+    container.innerHTML = '';
     
     if (jobs.length === 0) {
         container.innerHTML = '<p class="no-jobs">No job posts found</p>';
@@ -152,29 +186,28 @@ function renderJobPosts(jobs) {
     }
 
     jobs.forEach(job => {
-      const jobDiv = document.createElement('div');
-      jobDiv.className = 'job';
-      jobDiv.innerHTML = `
-        <div class="button-wrapper">
-          <button class="edit-button" data-job-id="${job.JobID}">Edit</button>
-        </div>
-        <h3 class="job-title">${job.JobName}</h3>
-        <p class="department">Category: ${job.CategoryName || 'Uncategorized'}</p>
-        <p class="email"><i class="fas fa-envelope"></i> ${job.ContactInfo}</p>
-        <p class="location"><i class="fas fa-map-marker-alt"></i> ${job.Location}</p>
-        <p class="job-type"><i class="fas fa-info-circle"></i>${job.PositionType} | ${job.MinEducation} | ${job.MinExperience} Years Experience</p>
-        <p class="job-description">${job.Description.substring(0, 100)}...</p>
-      `;
-      
-      jobPostsContent.appendChild(jobDiv);
+        const jobDiv = document.createElement('div');
+        jobDiv.className = 'job';
+        jobDiv.innerHTML = `
+            <div class="button-wrapper">
+                <button class="edit-button" data-job-id="${job.JobID}">Edit</button>
+            </div>
+            <h3 class="job-title">${job.JobName}</h3>
+            <p class="department">Category: ${job.CategoryName || 'Uncategorized'}</p>
+            <p class="email"><i class="fas fa-envelope"></i> ${job.ContactInfo}</p>
+            <p class="location"><i class="fas fa-map-marker-alt"></i> ${job.Location}</p>
+            <p class="job-type"><i class="fas fa-info-circle"></i>${job.PositionType} | ${job.MinEducation} | ${job.MinExperience} Years Experience</p>
+            <p class="job-description">${job.Description.substring(0, 100)}...</p>
+        `;
+        container.appendChild(jobDiv);
     });
     
     // Attach edit handlers
     document.querySelectorAll('.edit-button').forEach(button => {
-      button.addEventListener('click', (e) => {
-        const jobId = e.target.getAttribute('data-job-id');
-        editJobPost(jobId);
-      });
+        button.addEventListener('click', (e) => {
+            const jobId = e.target.getAttribute('data-job-id');
+            editJobPost(jobId);
+        });
     });
 }
 
