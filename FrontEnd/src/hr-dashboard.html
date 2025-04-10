@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,189 +7,159 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>TalentSync - Human Resources</title>
 </head>
-
-<!-- Header with title and navigation menu -->
-
 <body>
-    <header>
-        <div class="header-content">
-            <!-- Titles on the left -->
-            <div class="header-titles">
-                <h1>TalentSync</h1>
-                <h2>Employee Central - Human Resources</h2>
-            </div>
-            <!-- Navigation on the right -->
-            <div class="icon-wrapper">
-                <a href="#"><i class="fas fa-home"></i> Home</a>
-                <a href="#"><i class="fas fa-envelope"></i> Mail</a>
-                <div class="profile-dropdown">
-                    <a href="#" class="profile-link"><img src="path/to/placeholder-image.png"
-                            class="profile-placeholder">My Profile</a>
-                    <div class="dropdown-content">
-                        <a href="#"><i class="fas fa-user"></i> Profile Settings</a>
-                        <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
-                </div>
-            </div>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <div class="header-titles">
+        <h1>TalentSync</h1>
+        <h2 class="dashboard-title">Employee Central - Human Resources</h2>
+      </div>
+      <div class="icon-wrapper">
+        <a href="#"><i class="fas fa-home"></i> Home</a>
+        <a href="#"><i class="fas fa-envelope"></i> Mail</a>
+        <div class="profile-dropdown">
+          <a href="#" class="profile-link">
+            <i class="fas fa-user-circle"></i>
+            <span class="profile-name">Loading...</span>
+          </a>
+          <div class="dropdown-content">
+            <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
         </div>
-    </header>
+      </div>
+    </div>
+  </header>
 
-    <main>
-        <!-- Job posts quadrant -->
-        <section class="job-posts-container">
-            <h2>Job Posts</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="Search...">
-                <button class="create-button">+</button>
-            </div>
-            <div class="job-posts-content">
-                <div class="job">
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                    </div>
-                    <h3 class="job-title">Project Manager</h3>
-                    <p class="department">Category: Agriculture</p>
-                    <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
-                    <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
-                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years
-                        Experience</p>
-                    <p class="job-description">Job Description: ...</p>
-                </div>
-                <div class="job">
-                    <div class="button-wrapper">
-                        <button class="edit-button">Edit</button>
-                    </div>
-                    <h3 class="job-title">Machine Operator</h3>
-                    <p class="department">Category: Engineer</p>
-                    <p class="email"><i class="fas fa-envelope"></i> john@example.com</p>
-                    <p class="location"><i class="fas fa-map-marker-alt"></i> Canada, Surrey B.C 123st</p>
-                    <p class="job-type"><i class="fas fa-info-circle"></i>Full Time | Bachelors Degree | 3 Years
-                        Experience</p>
-                    <p class="job-description">Job Description: ...</p>
-                </div>
-            </div>
-        </section>
+  <main>
+    <!-- Job posts quadrant -->
+    <section class="job-posts-container">
+      <h2>Job Posts</h2>
+      <div class="search-bar">
+        <input type="text" placeholder="Search..." id="job-search">
+        <button class="create-button">+</button>
+      </div>
+      <div class="job-posts-content">
+        <!-- Jobs will be inserted here by JavaScript -->
+      </div>
+    </section>
 
-        <!-- Applicants quadrant -->
-        <section class="applications-container">
-            <h2>Applications</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="Search...">
-                <button class="filter-button">Filters</button>
-            </div>
-            <div class="applications-content">
-                <div class="application">
-                    <h3 class="application-title">Project Manager</h3>
-                    <p class="application-description">Applications: 5</p>
-                    <div class="button-wrapper">
-                        <button class="view-button">View</button>
-                    </div>
-                </div>
-                <div class="application">
-                    <h3 class="application-title">Machine Operator</h3>
-                    <p class="application-description">Applications: 8</p>
-                    <div class="button-wrapper">
-                        <button class="view-button">View</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- Applicants quadrant -->
+    <section class="applications-container">
+      <h2>Applications</h2>
+      <div class="search-bar">
+        <input type="text" placeholder="Search..." id="application-search">
+        <button class="filter-button">Filters</button>
+      </div>
+      <div class="applications-content">
+        <!-- Applications will be inserted here by JavaScript -->
+      </div>
+    </section>
 
-        <!-- View applicants quadrant -->
-        <section class="view-applicants-container">
-            <h2>View Applicants</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="Search: Name, Due Date, Category">
-            </div>
-            <div class="view-applicant-content">
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <h3 class="view-job-title">Job Post Title</h3>
-                    <p class="name">Name</p>
-                    <p class="user-category">Category:</p>
-                    <p class="application-due-date">Application Due Date</p>
-                    <div class="button-wrapper">
-                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
-                    </div>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <h3 class="view-job-title">Project Manager</h3>
-                    <p class="name">Sara Tori</p>
-                    <p class="user-category">Category:</p>
-                    <p class="application-due-date">Application Due Date</p>
-                    <div class="button-wrapper">
-                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
-                    </div>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <h3 class="view-job-title">Job Post Title</h3>
-                    <p class="name">John McDavis</p>
-                    <p class="user-category">Category:</p>
-                    <p class="application-due-date">Application Due Date</p>
-                    <div class="button-wrapper">
-                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
-                    </div>
-                </div>
-                <div class="user">
-                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
-                    <h3 class="view-job-title">Job Post Title</h3>
-                    <p class="name">Name</p>
-                    <p class="user-category">Category:</p>
-                    <p class="application-due-date">Application Due Date</p>
-                    <div class="button-wrapper">
-                        <button class="details-button"><i class="fas fa-info-circle"></i></button>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- View applicants quadrant -->
+    <section class="view-applicants-container">
+      <h2>View Applicants</h2>
+      <div class="search-bar">
+        <input type="text" placeholder="Search: Name, Due Date, Category" id="applicant-search">
+      </div>
+      <div class="view-applicant-content">
+        <!-- Applicants will be inserted here by JavaScript -->
+      </div>
+    </section>
 
-        <!-- Pop-Up Window Structure for view applicants quadrant-->
-        <div class="popup" id="applicant-popup" style="display:none; position:relative; z-index: 1000;">
-            <h2 class="view-job-title">Job Post Title</h2>
-            <div class="resume-container">
-                <div class="resume">
-                    <div class="resume-content">
-                        <p>resume file</p>
-                    </div>
-                </div>
-            </div>
-            <div class="button-container">
-                <button class="pass">Pass</button>
-                <button class="reject">Reject</button>
-            </div>
+    <!-- Applicant Detail Popup -->
+    <div class="popup" id="applicant-popup" style="display:none;">
+      <button class="close-popup">&times;</button>
+      <h2 class="view-job-title" id="popup-job-title"></h2>
+      <p id="popup-applicant-name"></p>
+      <p id="popup-applicant-status"></p>
+      <div class="resume-container">
+        <iframe id="resume-iframe" width="100%" height="500px"></iframe>
+      </div>
+      <div class="status-controls">
+        <select id="status-select">
+          <option value="Pending">Pending</option>
+          <option value="Next Step">Next Step</option>
+          <option value="Hired">Hired</option>
+          <option value="Screened Out">Screened Out</option>
+        </select>
+        <button id="save-status-btn">Save Status</button>
+      </div>
+    </div>
+
+    <!-- Backdrop -->
+    <div class="backdrop" id="backdrop" style="display:none;"></div>
+
+    <!-- Notifications quadrant -->
+    <section class="notifications-container">
+      <h2>Notifications</h2>
+      <div class="search-bar">
+        <input type="text" placeholder="Search Notifications..." id="notification-search">
+      </div>
+      <div class="notifications-content">
+        <!-- Notifications will be inserted here by JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  
+  <div id="create-job-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Create New Job</h2>
+      <form id="job-form">
+        <input type="text" id="job-title" placeholder="Job Title" required>
+        <select id="position-type" required>
+          <option value="">Select Position Type</option>
+          <option value="Full Time">Full Time</option>
+          <option value="Part Time">Part Time</option>
+          <option value="Internship">Internship</option>
+        </select>
+        <input type="text" id="location" placeholder="Location" required>
+        <input type="text" id="education" placeholder="Minimum Education">
+        <input type="number" id="experience" placeholder="Years of Experience">
+        <textarea id="description" placeholder="Job Description"></textarea>
+        <input type="email" id="contact-email" placeholder="Contact Email" required>
+        <input type="number" id="salary-range" placeholder="Salary Range">
+        <input type="date" id="close-date" required>
+        <button type="button" id="submit-job">Create Job</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="edit-job-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close-edit-modal">&times;</span>
+      <h2>Edit Job Post</h2>
+      <form id="edit-job-form">
+        <input type="text" id="edit-job-title" placeholder="Job Title" required>
+        <select id="edit-position-type" required>
+          <option value="Full Time">Full Time</option>
+          <option value="Part Time">Part Time</option>
+          <option value="Internship">Internship</option>
+        </select>
+        <input type="text" id="edit-location" placeholder="Location" required>
+        <input type="text" id="edit-education" placeholder="Minimum Education">
+        <input type="number" id="edit-experience" placeholder="Years of Experience">
+        <textarea id="edit-description" placeholder="Job Description"></textarea>
+        <input type="email" id="edit-contact-email" placeholder="Contact Email" required>
+        <input type="number" id="edit-salary-range" placeholder="Salary Range">
+        <input type="date" id="edit-close-date" required>
+        <div class="form-buttons">
+            <button type="button" id="submit-job-edit">Update Job</button>
+            <button type="button" id="delete-job-btn" class="delete-btn">Delete Job</button>
         </div>
+      </form>
+    </div>
+  </div>
 
-        <!-- Backdrop -->
-        <div class="backdrop" id="backdrop" style="display:none;"></div>
+  <!-- Toast messages container -->
+  <div id="toast-container"></div>
 
-        <!-- Notifications quadrant -->
-        <section class="notifications-container">
-            <h2>Notifications</h2>
-            <div class="search-bar">
-                <input type="text" placeholder="Search Notifications...">
-            </div>
-            <div class="notifications-content">
-                <div class="notification">
-                    <h3 class="notification-title">Request For Removal - HR</h3>
-                    <p class="notification-description">There’s a job post...</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-                <div class="notification">
-                    <h3 class="notification-title">Notice</h3>
-                    <p class="notification-description">Everyone in room...</p>
-                    <div class="button-wrapper">
-                        <button class="remove-button">X</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script src="hr-dashboard.js"></script>
+  <script src="hr-dashboard.js"></script>
 </body>
-
 </html>

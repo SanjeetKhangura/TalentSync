@@ -1,61 +1,61 @@
-// // Global variables
-// let currentAdminId = null;
+// Global variables
+let currentAdminId = null;
 
-// //Verify admin status and permissions
-// async function verifyAdmin() {
-//     const token = localStorage.getItem('token');
-//     if (!token) throw new Error('No authentication token');
+//Verify admin status and permissions
+async function verifyAdmin() {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No authentication token');
   
-//     try {
-//       const response = await fetch('http://localhost:3000/users/me', {
-//         headers: { 
-//           'Authorization': `Bearer ${token}`,
-//           'Content-Type': 'application/json'
-//         },
-//         credentials: 'include'
-//       });
+    try {
+      const response = await fetch('http://localhost:3000/users/me', {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
   
-//       if (!response.ok) {
-//         const error = await response.json();
-//         throw new Error(error.message || 'Authentication failed');
-//       }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Authentication failed');
+      }
       
-//       const user = await response.json();
+      const user = await response.json();
       
-//       if (user.role !== 'Admin' || !user.adminId) {
-//         throw new Error('Admin privileges required');
-//       }
+      if (user.role !== 'Admin' || !user.adminId) {
+        throw new Error('Admin privileges required');
+      }
   
-//       return {
-//         userId: user.userId,
-//         adminId: user.adminId,
-//         name: user.name
-//       };
-//     } catch (error) {
-//       console.error('Auth error:', error);
-//       throw error;
-//     }
-// }
+      return {
+        userId: user.userId,
+        adminId: user.adminId,
+        name: user.name
+      };
+    } catch (error) {
+      console.error('Auth error:', error);
+      throw error;
+    }
+}
 
-// // Initialize dashboard
-// document.addEventListener("DOMContentLoaded", async () => {
-//     console.log('Stored token:', localStorage.getItem('token'));
+// Initialize dashboard
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log('Stored token:', localStorage.getItem('token'));
     
-//     try {
-//       const adminData = await verifyAdmin();
-//       currentAdminId = adminData.adminId;
+    try {
+      const adminData = await verifyAdmin();
+      currentAdminId = adminData.adminId;
       
-//       console.log('Admin data:', adminData);
+      console.log('Admin data:', adminData);
       
-//       await loadAllData();
-//       setupEventListeners();
+      await loadAllData();
+      setupEventListeners();
       
-//     } catch (error) {
-//       console.error('Initialization failed:', error);
-//       localStorage.removeItem('token');
-//       window.location.href = 'login.html';
-//     }
-// });
+    } catch (error) {
+      console.error('Initialization failed:', error);
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+});
 
 // Load all dashboard data
 async function loadAllData() {
@@ -206,11 +206,6 @@ function displayCategories(categories) {
     const container = document.querySelector('.categories-content');
     container.innerHTML = '';
 
-    if (!categories || categories.length === 0) {
-        container.innerHTML = '<p class="no-categories">No categories found</p>';
-        return;
-    }
-
     categories.forEach(category => {
         const categoryElement = document.createElement('div');
         categoryElement.className = 'category';
@@ -218,8 +213,9 @@ function displayCategories(categories) {
         categoryElement.innerHTML = `
             <h3 class="category-title">${category.Name}</h3>
             <p class="category-description">ID: ${category.CategoryID}</p>
-            <div class="button-wrapper">
+            <div class="category-actions">
                 <button class="edit-button">Edit</button>
+                <button class="delete-category-button">Delete</button>
             </div>
         `;
         container.appendChild(categoryElement);
@@ -382,6 +378,37 @@ function setupEventListeners() {
     document.querySelector('.notifications-content')?.addEventListener('click', handleNotificationClick);
     document.getElementById('logout-link')?.addEventListener('click', handleLogout);
 
+    document.body.addEventListener('click', (e) => {
+        // Close button
+        if (e.target.classList.contains('close-modal')) {
+            const modal = e.target.closest('.modal-overlay');
+            if (modal) modal.remove();
+        }
+        
+        // Click outside content
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.remove();
+        }
+    });
+
+    document.querySelector('.job-posts-content').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('remove-button')) {
+            const jobCard = e.target.closest('.job-card');
+            const jobId = jobCard.dataset.id;
+            const jobName = jobCard.querySelector('.job-title').textContent;
+            await deleteJob(jobId, jobName);
+        }
+    });
+
+    document.querySelector('.categories-content').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-category-button')) {
+            const categoryElement = e.target.closest('.category');
+            const categoryId = categoryElement.dataset.id;
+            const categoryName = categoryElement.querySelector('.category-title').textContent;
+            await deleteCategory(categoryId, categoryName);
+        }
+    });
+
     const reportsLink = document.getElementById('reports-link');
     if (reportsLink) {
         reportsLink.addEventListener('click', function(e) {
@@ -457,9 +484,69 @@ async function createCategory() {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to create category');
         }
+
+        const result = await response.json();
+
+        showNotification({
+        type: 'success',
+        message: result.message || 'Category Created successfully',
+        duration: 5000
+        } );
     } catch (error) {
         console.error('Error creating category:', error);
         alert(`Failed to create category: ${error.message}`);
+    }
+}
+
+async function deleteCategory(categoryId, categoryName) {
+    if (!confirm(`Delete category "${categoryName}"?\n\nThis will remove the category but keep all jobs (they will become uncategorized).`)) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Authentication required');
+
+        const response = await fetch(`http://localhost:3000/admin/categories/${categoryId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // First check if response is OK
+        if (!response.ok) {
+            // Try to parse error response as JSON
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            throw new Error(errorData.message || `Request failed with status ${response.status}`);
+        }
+
+        // If response is OK, parse as JSON
+        const result = await response.json();
+
+        // Refresh categories and jobs lists
+        await loadCategories();
+        await loadJobs();
+        
+        showNotification({
+            type: 'success',
+            message: result.message || `Category deleted (${result.jobsAffected || 0} jobs unassigned)`,
+            duration: 5000
+        });
+    } catch (error) {
+        console.error('Delete category error:', error);
+        
+        showNotification({
+            type: 'error',
+            message: error.message || 'Failed to delete category',
+            duration: 8000
+        });
     }
 }
 
@@ -502,6 +589,14 @@ async function createHRStaff() {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Failed to create HR staff');
         }
+
+        const result = await response.json();
+
+        showNotification({
+        type: 'success',
+        message: result.message || 'HR Staff Created successfully',
+        duration: 5000
+        } );
     } catch (error) {
         console.error('Error creating HR staff:', error);
         alert(`Failed to create HR staff: ${error.message}`);
@@ -562,7 +657,7 @@ async function showJobsInCategory(categoryId, categoryName) {
 
         // Create modal HTML
         const modalHTML = `
-            <div class="modal-overlay">
+            <div class="modal-overlay" id="jobs-modal">
                 <div class="modal-island">
                     <button class="close-modal">&times;</button>
                     <h3>Jobs in "${categoryName}"</h3>
@@ -582,12 +677,26 @@ async function showJobsInCategory(categoryId, categoryName) {
             </div>
         `;
 
-        
+        // Remove any existing modal first
+        const existingModal = document.getElementById('jobs-modal');
+        if (existingModal) existingModal.remove();
+
+        // Add modal to DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+        // Add event listener for close button
         document.querySelector('.close-modal').addEventListener('click', () => {
-            document.querySelector('.modal-overlay').remove();
+            const modal = document.getElementById('jobs-modal');
+            if (modal) modal.remove();
         });
+
+        // Close modal when clicking outside content
+        document.querySelector('.modal-overlay').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.remove();
+            }
+        });
+
     } catch (error) {
         console.error('Error:', error);
         alert(`Failed to load jobs: ${error.message}`);
@@ -621,29 +730,54 @@ function handleNotificationClick(e) {
 }
 
 // CRUD operations
-async function deleteJob(jobId) {
-    if (!confirm('Are you sure you want to delete this job?')) return;
-    
+async function deleteJob(jobId, jobName) {
+    if (!confirm(`Are you sure you want to delete "${jobName}" and ALL its applications?`)) {
+        return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:3000/admin/jobs/${jobId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Authentication required');
+
+        const response = await fetch(`http://localhost:3000/admin/jobs/${jobId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to delete job');
         }
-      });
-      
-      if (response.ok) {
+
+        // Refresh the jobs list
         await loadJobs();
-        alert('Job deleted successfully!');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete job');
-      }
+        
+        // Show success message
+        showNotification({
+            type: 'success',
+            message: result.message || 'Job deleted successfully',
+            duration: 5000
+        });
     } catch (error) {
-      console.error('Error deleting job:', error);
-      alert(`Failed to delete job: ${error.message}`);
+        console.error('Delete job error:', error);
+        
+        showNotification({
+            type: 'error',
+            message: error.message || 'Failed to delete job',
+            duration: 8000
+        });
+
+        // Optional: Show more details in development
+        if (process.env.NODE_ENV === 'development' && error.info) {
+            console.error('Error details:', error.info);
+        }
     }
 }
+
 
 async function updateCategory(categoryId, newName) {
     try {
@@ -663,7 +797,21 @@ async function updateCategory(categoryId, newName) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update category');
       }
+
+      const result = await response.json();
+
+      showNotification({
+        type: 'success',
+        message: result.message || 'Catregory Updated successfully',
+        duration: 5000
+    });
     } catch (error) {
+
+        showNotification({
+            type: 'error',
+            message: error.message || 'Failed to Update Category',
+            duration: 8000
+        });
       console.error('Error updating category:', error);
       alert(`Failed to update category: ${error.message}`);
     }
@@ -688,7 +836,20 @@ async function deleteHRStaff(memberId) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete HR staff');
       }
+
+      const result = await response.json();
+
+      showNotification({
+        type: 'success',
+        message: result.message || 'HR Staff deleted successfully',
+        duration: 5000
+      });
     } catch (error) {
+        showNotification({
+            type: 'error',
+            message: error.message || 'Failed to delete HR Account',
+            duration: 8000
+        });
       console.error('Error deleting HR staff:', error);
       alert(`Failed to delete HR staff: ${error.message}`);
     }
@@ -893,16 +1054,25 @@ function generateMonthlyPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Monthly Recruitment Metrics', 14, 50);
     
+    // Safely extract metrics with defaults
+    const metrics = data.metrics || {};
+    const totalApplications = metrics.totalApplications || 0;
+    const hires = metrics.hires || 0;
+    const shortlisted = metrics.shortlisted || 0;
+    const screenedOut = metrics.screenedOut || 0;
+    const hireRate = hires > 0 ? ((hires / totalApplications) * 100).toFixed(1) : '0.0';
+    const avgSalary = metrics.avgSalary ? `$${metrics.avgSalary.toFixed(2)}` : '$0.00';
+    
     doc.autoTable({
         startY: 60,
         head: [['Metric', 'Value']],
         body: [
-            ['Total Applications', data.metrics.totalApplications],
-            ['Hires', data.metrics.hires],
-            ['Shortlisted', data.metrics.shortlisted],
-            ['Screened Out', data.metrics.screenedOut],
-            ['Hire Rate', `${((data.metrics.hires / data.metrics.totalApplications) * 100).toFixed(1)}%`],
-            ['Average Salary', `$${data.metrics.avgSalary.toFixed(2)}`]
+            ['Total Applications', totalApplications],
+            ['Hires', hires],
+            ['Shortlisted', shortlisted],
+            ['Screened Out', screenedOut],
+            ['Hire Rate', `${hireRate}%`],
+            ['Average Salary', avgSalary]
         ],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
@@ -911,17 +1081,17 @@ function generateMonthlyPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Top Performing Jobs', 14, doc.lastAutoTable.finalY + 20);
     
-    const topJobsData = data.topJobs.map(job => [
-        job.JobName,
-        job.applications,
-        job.hires,
-        `$${job.avgSalary.toFixed(2)}`
+    const topJobsData = (data.topJobs || []).map(job => [
+        job.JobName || 'N/A',
+        job.applications || 0,
+        job.hires || 0,
+        job.avgSalary ? `$${job.avgSalary.toFixed(2)}` : '$0.00'
     ]);
     
     doc.autoTable({
         startY: doc.lastAutoTable.finalY + 30,
         head: [['Job Title', 'Applications', 'Hires', 'Avg Salary']],
-        body: topJobsData,
+        body: topJobsData.length > 0 ? topJobsData : [['No jobs found', '', '', '']],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
     });
@@ -931,17 +1101,17 @@ function generateYearlyPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Yearly Recruitment Trends', 14, 50);
     
-    const monthlyData = data.monthlyTrends.map(month => [
-        month.month,
-        month.applications,
-        month.hires,
-        month.shortlisted
+    const monthlyData = (data.monthlyTrends || []).map(month => [
+        month.month || 'N/A',
+        month.applications || 0,
+        month.hires || 0,
+        month.shortlisted || 0
     ]);
     
     doc.autoTable({
         startY: 60,
         head: [['Month', 'Applications', 'Hires', 'Shortlisted']],
-        body: monthlyData,
+        body: monthlyData.length > 0 ? monthlyData : [['No data available', '', '', '']],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
     });
@@ -950,17 +1120,17 @@ function generateYearlyPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Department Performance', 14, doc.lastAutoTable.finalY + 20);
     
-    const deptData = data.departmentStats.map(dept => [
-        dept.category,
-        dept.applications,
-        dept.hires,
-        `$${dept.avgSalary.toFixed(2)}`
+    const deptData = (data.departmentStats || []).map(dept => [
+        dept.category || 'N/A',
+        dept.applications || 0,
+        dept.hires || 0,
+        dept.avgSalary ? `$${dept.avgSalary.toFixed(2)}` : '$0.00'
     ]);
     
     doc.autoTable({
         startY: doc.lastAutoTable.finalY + 30,
         head: [['Department', 'Applications', 'Hires', 'Avg Salary']],
-        body: deptData,
+        body: deptData.length > 0 ? deptData : [['No departments found', '', '', '']],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
     });
@@ -968,15 +1138,22 @@ function generateYearlyPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Yearly Summary', 14, doc.lastAutoTable.finalY + 20);
     
+    const yearlySummary = data.yearlySummary || {};
+    const totalApplications = yearlySummary.totalApplications || 0;
+    const totalHires = yearlySummary.hires || 0;
+    const hireRate = yearlySummary.hireRate || '0.0';
+    const totalSalary = yearlySummary.totalSalary || 0;
+    const avgSalary = yearlySummary.avgSalary ? yearlySummary.avgSalary.toFixed(2) : '0.00';
+    
     doc.autoTable({
         startY: doc.lastAutoTable.finalY + 30,
         head: [['Metric', 'Value']],
         body: [
-            ['Total Applications', data.yearlySummary.totalApplications],
-            ['Total Hires', data.yearlySummary.hires],
-            ['Hire Rate', `${data.yearlySummary.hireRate}%`],
-            ['Total Salary', `$${data.yearlySummary.totalSalary.toFixed(2)}`],
-            ['Average Salary', `$${data.yearlySummary.avgSalary.toFixed(2)}`]
+            ['Total Applications', totalApplications],
+            ['Total Hires', totalHires],
+            ['Hire Rate', `${hireRate}%`],
+            ['Total Salary', `$${totalSalary.toFixed(2)}`],
+            ['Average Salary', `$${avgSalary}`]
         ],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
@@ -987,18 +1164,18 @@ function generateCategoryPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Category Analysis', 14, 50);
     
-    const catData = data.categoryPerformance.map(cat => [
-        cat.category,
-        cat.applications,
-        cat.hires,
-        `${cat.hireRate}%`,
-        `$${cat.avgSalary.toFixed(2)}`
+    const catData = (data.categoryPerformance || []).map(cat => [
+        cat.category || 'N/A',
+        cat.applications || 0,
+        cat.hires || 0,
+        cat.hireRate || '0.0',
+        cat.avgSalary ? `$${cat.avgSalary.toFixed(2)}` : '$0.00'
     ]);
     
     doc.autoTable({
         startY: 60,
         head: [['Category', 'Applications', 'Hires', 'Hire Rate', 'Avg Salary']],
-        body: catData,
+        body: catData.length > 0 ? catData : [['No categories found', '', '', '', '']],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
     });
@@ -1006,15 +1183,15 @@ function generateCategoryPDF(doc, data, startDate, endDate) {
     doc.setFontSize(16);
     doc.text('Time to Hire by Category', 14, doc.lastAutoTable.finalY + 20);
     
-    const timeData = data.timeToHire.map(item => [
-        item.category,
-        `${item.avgDaysToHire.toFixed(1)} days`
+    const timeData = (data.timeToHire || []).map(item => [
+        item.category || 'N/A',
+        item.avgDaysToHire ? `${item.avgDaysToHire.toFixed(1)} days` : 'N/A'
     ]);
     
     doc.autoTable({
         startY: doc.lastAutoTable.finalY + 30,
         head: [['Category', 'Avg Time to Hire']],
-        body: timeData,
+        body: timeData.length > 0 ? timeData : [['No data available', '']],
         theme: 'grid',
         headStyles: { fillColor: [44, 62, 80] }
     });
@@ -1024,9 +1201,9 @@ function generateCategoryPDF(doc, data, startDate, endDate) {
         doc.text('Top Sources by Category', 14, doc.lastAutoTable.finalY + 20);
         
         const sourcesData = data.sourcesByCategory.map(source => [
-            source.category,
-            source.Source,
-            source.count
+            source.category || 'N/A',
+            source.Source || 'N/A',
+            source.count || 0
         ]);
         
         doc.autoTable({
@@ -1039,10 +1216,79 @@ function generateCategoryPDF(doc, data, startDate, endDate) {
     }
 }
 
+function showNotification({ type, message, duration }) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <span class="icon">${type === 'success' ? '✓' : '⚠'}</span>
+        <span class="message">${message}</span>
+        <button class="close-btn">&times;</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    const timer = setTimeout(() => {
+        notification.remove();
+    }, duration);
+    
+    // Manual close
+    notification.querySelector('.close-btn').addEventListener('click', () => {
+        clearTimeout(timer);
+        notification.remove();
+    });
+    
+    // Add some basic styling
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateX(100%);
+            animation: slideIn 0.3s forwards;
+        }
+        .notification.success { background: #4CAF50; }
+        .notification.error { background: #F44336; }
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-left: 10px;
+        }
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 function formatDate(dateString, forFileName = false) {
     const date = new Date(dateString);
     if (forFileName) {
         return `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}`;
     }
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
 }
