@@ -602,9 +602,9 @@ async function deleteCategory(categoryId, categoryName) {
             }
         });
 
-        // First check if response is OK
+        
         if (!response.ok) {
-            // Try to parse error response as JSON
+            
             let errorData;
             try {
                 errorData = await response.json();
@@ -756,7 +756,7 @@ async function showJobsInCategory(categoryId, categoryName) {
         // Add modal to DOM
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        // Add event listener for close button
+        // close button
         document.querySelector('.close-modal').addEventListener('click', () => {
             const modal = document.getElementById('jobs-modal');
             if (modal) modal.remove();
